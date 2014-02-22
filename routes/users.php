@@ -1,7 +1,7 @@
 <?php
 function authenticate() {
 	$app = \Slim\Slim::getInstance();
-	// var_dump($app->request()->post('password')); die();
+
 	if (!is_null($app->request()->post('username')) and !is_null($app->request()->post('password'))) {
 		try {
 			$db = getConnection();
@@ -11,7 +11,7 @@ function authenticate() {
 
 			$username = $app->request()->post('username');
 			$password = sha1($app->request()->post('password'));
-			
+
 			$stmt->bindParam(':username', $username);
 			$stmt->bindParam(':password', $password);
 
@@ -24,44 +24,41 @@ function authenticate() {
 				echo '{"token": "' . $user->token . '"}';
 			} else {
 				echo '{"error":"Wrong credentials"}';
-				// TODO logs + manage error
+				$app->log->error('wrong credential : ' . $username . ' - ' . $password);
 			}
-		} catch(PDOException $e) {
-			echo '{"error":"Database connection problem"}';
-			// TODO logs + manage error
-			// $e->getMessage()
+		} catch(Exception $e) {
+			echo '{"error":"' . $e->getMessage() . '"}';
 		}
 	} else {
-		echo '{"error":"wrong params"}';
+		echo '{"error":"wrong parameters"}';
+		$app->log->error('wrong parameters');
 	}
 }
 
-function getUser($token) {
+function getUser($token, $db) {
+	$app = \Slim\Slim::getInstance();
+
 	if (!is_null($token)) {
-		try {
-			$db = getConnection();
+		$sql = 'SELECT id FROM users WHERE token = :token';
+		$stmt = $db->prepare($sql);
 
-			$sql = 'SELECT id FROM users WHERE token = :token';
-			$stmt = $db->prepare($sql);
+		$stmt->bindParam(':token', $token);
 
-			$stmt->bindParam(':token', $token);
+		$stmt->execute();
 
-			$stmt->execute();
+		$user = $stmt->fetch(PDO::FETCH_OBJ);
+		$db = null;
 
-			$user = $stmt->fetch(PDO::FETCH_OBJ);
-			$db = null;
+		if ($user) {
+			return $user->id;
+		} else {
+			$app->log->error('wrong token : ' . $token);
 
-			if ($user) {
-				return $user->id;
-			} else {
-				return false;
-			}
-		} catch(PDOException $e) {
-			echo '{"error":"Database connection problem"}';
-			// TODO logs + manage error
-			// $e->getMessage()
+			throw new Exception('wrong token');
 		}
 	} else {
-		return false;
+		$app->log->error('token null');
+
+		throw new Exception('token null');
 	}
 }

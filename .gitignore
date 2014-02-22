@@ -16,3 +16,7 @@ nb-configuration.xml
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+### Logs ###
+logs/*.log

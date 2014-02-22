@@ -27,112 +27,109 @@ function getChildrenFolders($folders, $userId, $db) {
 function getFolders() {
 	$app = \Slim\Slim::getInstance();
 
-	$userId = getUser($app->request()->get('token'));
+	try {
+		$db = getConnection();
 
-	if ($userId) {
-		try {
-			$db = getConnection();
+		$userId = getUser($app->request()->get('token'), $db);
 
-			$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id IS NULL AND status = 1';
-			$stmt = $db->prepare($sql);
+		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id = 0 AND status = 1';
+		$stmt = $db->prepare($sql);
 
-			$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':userId', $userId);
 
-			$stmt->execute();
+		$stmt->execute();
 
-			$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-			$folders = getChildrenFolders($folders, $userId, $db);
+		$folders = getChildrenFolders($folders, $userId, $db);
 
-			echo json_encode($folders);
-		} catch(PDOException $e) {
-			echo '{"error":"Database connection problem"}';
-			// TODO logs + manage error
-			// $e->getMessage()
-		}
-	} else {
-		echo '{"error":"Wrong token"}';
+		echo json_encode($folders);
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
 	}
 }
 
 /**
  * Get the folder details and its children
- * @param  int $id Folder id
- * @return json     [description]
+ * @param  int $id 	Folder id
+ * @return json     The folder details
  */
 function getFolder($id) {
 	$app = \Slim\Slim::getInstance();
 
-	$userId = getUser($app->request()->get('token'));
+	try {
+		$db = getConnection();
 
-	if ($userId) {
-		try {
-			$db = getConnection();
+		$userId = getUser($app->request()->get('token'), $db);
 
-			$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND id = :id AND status = 1';
-			$stmt = $db->prepare($sql);
+		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND id = :id AND status = 1';
+		$stmt = $db->prepare($sql);
 
-			$stmt->bindParam(':userId', $userId);
-			$stmt->bindParam(':id', $id);
+		$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':id', $id);
 
-			$stmt->execute();
+		$stmt->execute();
 
-			$folder = $stmt->fetch(PDO::FETCH_OBJ);
+		$folder = $stmt->fetch(PDO::FETCH_OBJ);
 
 
-			$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id = :folderId AND status = 1';
-			$stmt = $db->prepare($sql);
+		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id = :folderId AND status = 1';
+		$stmt = $db->prepare($sql);
 
-			$stmt->bindParam(':userId', $userId);
-			$stmt->bindParam(':folderId', $folder->id);
+		$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':folderId', $folder->id);
 
-			$stmt->execute();
+		$stmt->execute();
 
-			$folder->folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$folder->folders = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-			$folder->folders = getChildrenFolders($folder->folders, $userId, $db);
+		$folder->folders = getChildrenFolders($folder->folders, $userId, $db);
 
-			echo json_encode($folder);
-		} catch(PDOException $e) {
-			echo '{"error":"Database connection problem"}';
-			// TODO logs + manage error
-			// $e->getMessage()
-		}
-	} else {
-		echo '{"error":"Wrong token"}';
+		echo json_encode($folder);
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
+	}
+}
+
+/**
+ * Get the tree of the folder
+ * @param  int $id 	Folder id
+ * @return json     The tree
+ */
+function getFolderTree($id) {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$userId = getUser($app->request()->get('token'), $db);
+
+		// ...
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
 	}
 }
 
 function addFolder() {
 	$app = \Slim\Slim::getInstance();
 
-	$userId = getUser($app->request()->get('token'));
+	try {
+		$db = getConnection();
 
-	if ($userId) {
-		if ($app->request()->post('name')) {
-			try {
-				$db = getConnection();
+		$userId = getUser($app->request()->get('token'), $db);
 
-				$sql = 'INSERT INTO folders (name, created, user_id, parent_id) VALUES (:name, NOW(), :userId, :parentId)';
-				$stmt = $db->prepare($sql);
+		$sql = 'INSERT INTO folders (name, created, user_id, parent_id) VALUES (:name, NOW(), :userId, :parentId)';
+		$stmt = $db->prepare($sql);
 
-				$name = $app->request()->post('name');
-				$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : NULL);
+		$name = $app->request()->post('name');
+		$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : 0);
 
-				$stmt->bindParam(':name', $name);
-				$stmt->bindParam(':userId', $userId);
-				$stmt->bindParam(':parentId', $parentId);
-				
-				echo $stmt->execute();
-			} catch(PDOException $e) {
-				echo '{"error":"Database connection problem"}';
-				// TODO logs + manage error
-				// $e->getMessage()
-			}
-		} else {
-			echo '{"error":"Wrong parameters"}';
-		}
-	} else {
-		echo '{"error":"Wrong token"}';
+		$stmt->bindParam(':name', $name);
+		$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':parentId', $parentId);
+		
+		echo $stmt->execute();
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
 	}
 }
