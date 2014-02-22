@@ -13,6 +13,8 @@ $app->get('/links', 'getLinks');
 
 $app->get('/folders', 'getFolders');
 
+$app->get('/folders/:id', 'getFolder');
+
 $app->post('/users/authenticate', 'authenticate');
 
 $app->run();
