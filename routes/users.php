@@ -10,8 +10,8 @@ function authenticate() {
 			$stmt = $db->prepare($sql);
 
 			$username = $app->request()->post('username');
-			$password = $app->request()->post('password');
-
+			$password = sha1($app->request()->post('password'));
+			
 			$stmt->bindParam(':username', $username);
 			$stmt->bindParam(':password', $password);
 
