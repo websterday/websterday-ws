@@ -15,6 +15,8 @@ $app->get('/folders', 'getFolders');
 
 $app->get('/folders/:id', 'getFolder');
 
+$app->post('/folders', 'addFolder');
+
 $app->post('/users/authenticate', 'authenticate');
 
 $app->run();

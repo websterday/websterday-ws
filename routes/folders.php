@@ -102,3 +102,37 @@ function getFolder($id) {
 		echo '{"error":"Wrong token"}';
 	}
 }
+
+function addFolder() {
+	$app = \Slim\Slim::getInstance();
+
+	$userId = getUser($app->request()->get('token'));
+
+	if ($userId) {
+		if ($app->request()->post('name')) {
+			try {
+				$db = getConnection();
+
+				$sql = 'INSERT INTO folders (name, created, user_id, parent_id) VALUES (:name, NOW(), :userId, :parentId)';
+				$stmt = $db->prepare($sql);
+
+				$name = $app->request()->post('name');
+				$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : NULL);
+
+				$stmt->bindParam(':name', $name);
+				$stmt->bindParam(':userId', $userId);
+				$stmt->bindParam(':parentId', $parentId);
+				
+				echo $stmt->execute();
+			} catch(PDOException $e) {
+				echo '{"error":"Database connection problem"}';
+				// TODO logs + manage error
+				// $e->getMessage()
+			}
+		} else {
+			echo '{"error":"Wrong parameters"}';
+		}
+	} else {
+		echo '{"error":"Wrong token"}';
+	}
+}
