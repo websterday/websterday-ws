@@ -15,7 +15,7 @@ CREATE TABLE `folders` (
   `updated` datetime DEFAULT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `user_id` int(11) NOT NULL,
-  `parent_id` int(11) DEFAULT NULL,
+  `parent_id` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`user_id`),
   KEY `fk_folders_users_idx` (`user_id`),
   KEY `fk_folders_folders_idx` (`parent_id`)
