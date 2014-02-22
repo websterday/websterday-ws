@@ -92,6 +92,37 @@ function getFolder($id) {
 }
 
 /**
+ * Get the parent folder recursively to get the tree of a folder
+ * @param  object 	$folder  The folder to get the parent
+ * @param  int 		$userId  The authenticated user
+ * @param  object 	$db      PDO object
+ * @return array         	 The parent folder with his child
+ */
+function getTree($folder, $userId, $db) {
+	$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND id = :id AND status = 1';
+	$stmt = $db->prepare($sql);
+
+	$stmt->bindParam(':userId', $userId);
+	$stmt->bindParam(':id', $folder->parent_id);
+
+	$stmt->execute();
+
+	$parentFolder = $stmt->fetch(PDO::FETCH_OBJ);
+
+	if ($parentFolder) {
+		unset($folder->parent_id);
+
+		$parentFolder->folder = $folder;
+
+		return getTree($parentFolder, $userId, $db);
+	} else {
+		return $folder;
+	}
+
+	// $folders[$i]->folders = getTree($stmt->fetchAll(PDO::FETCH_OBJ), $userId, $db);
+}
+
+/**
  * Get the tree of the folder
  * @param  int $id 	Folder id
  * @return json     The tree
@@ -104,7 +135,21 @@ function getFolderTree($id) {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		// ...
+		$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND id = :id AND status = 1';
+		$stmt = $db->prepare($sql);
+
+		$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':id', $id);
+
+		$stmt->execute();
+
+		$folder = $stmt->fetch(PDO::FETCH_OBJ);
+
+		$tree = getTree($folder, $userId, $db);
+
+		unset($tree->parent_id);
+
+		echo json_encode($tree);
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
