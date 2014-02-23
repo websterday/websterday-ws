@@ -49,7 +49,7 @@ function createTree(&$list, $parent) {
 
     foreach ($parent as $k=>$l) {
         if (isset($list[$l->id])) {
-            $l->children = createTree($list, $list[$l->id]);
+            $l->folders = createTree($list, $list[$l->id]);
         }
         unset($l->parent_id);
         $tree[] = $l;
