@@ -24,6 +24,39 @@ function getChildrenFolders($folders, $userId, $db) {
 	return $folders;
 }
 
+// function createTree($folders, $parent) {
+// 	$tree = array();
+
+// 	foreach ($folders as $f) {
+// 		print_r($f);
+// 		// if ($f->parent_id == $parent) {
+// 		// 	$f->children = createTree($folders, $f);
+// 		// }
+// 		$tree[] = $f;
+// 	}
+
+// 	return $tree;
+// }
+
+/**
+ * Create a tree recursively
+ * @param  [type] $list   [description]
+ * @param  [type] $parent [description]
+ * @return [type]         [description]
+ */
+function createTree(&$list, $parent) {
+    $tree = array();
+
+    foreach ($parent as $k=>$l) {
+        if (isset($list[$l->id])) {
+            $l->children = createTree($list, $list[$l->id]);
+        }
+        unset($l->parent_id);
+        $tree[] = $l;
+    } 
+    return $tree;
+}
+
 function getFolders() {
 	$app = \Slim\Slim::getInstance();
 
@@ -32,18 +65,73 @@ function getFolders() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id IS NULL AND status = 1';
-		$stmt = $db->prepare($sql);
+		$tree = array();
+		$getTree = true;
 
-		$stmt->bindParam(':userId', $userId);
+		// Check if there is changes since the last time
+		if ($app->request()->get('last')) {
+			// Check that the timestamp is correct and inferior to the current timestamp
+			if (checkTimeStamp($app->request()->get('last')) and $app->request()->get('last') < time()) {
+				$sql = 'SELECT created, updated FROM folders WHERE user_id = :userId AND (created > :last OR updated > :last)';
+				$stmt = $db->prepare($sql);
 
-		$stmt->execute();
+				$last = date('Y-m-d H:i:s', $app->request()->get('last'));
 
-		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+				$stmt->bindParam(':userId', $userId);
+				$stmt->bindParam(':last', $last);
 
-		$folders = getChildrenFolders($folders, $userId, $db);
+				$stmt->execute();
 
-		echo json_encode($folders);
+				$lastFolder = $stmt->fetch(PDO::FETCH_OBJ);
+
+				// print_r($lastFolder); die();
+
+				if (!empty($lastFolder)) {
+					if (!is_null($lastFolder->updated)) {
+						$lastDate = strtotime($lastFolder->updated);
+					} else {
+						$lastDate = strtotime($lastFolder->created);
+					}
+				} else {
+					$getTree = false;
+				}
+			} else {
+				throw new Exception('Wrong parameters');
+			}
+		}
+
+		if ($getTree) {
+			$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND status = 1';
+			$stmt = $db->prepare($sql);
+
+			$stmt->bindParam(':userId', $userId);
+
+			$stmt->execute();
+
+			$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+			$new = array();
+
+			foreach ($folders as $a){
+				if (is_null($a->parent_id)) {
+					$a->parent_id = 0;
+				}
+
+				$new[$a->parent_id][] = $a;
+			}
+
+			$tree = createTree($new, $new[0]);
+		}
+
+		$res = array(
+			'folders' => $tree,
+		);
+
+		if (isset($lastDate)) {
+			$res['last'] = $lastDate;
+		}
+
+		echo json_encode($res);
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}

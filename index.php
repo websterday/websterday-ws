@@ -4,6 +4,7 @@ ini_set('display_errors', '1');
 
 require 'vendor/autoload.php';
 require 'config/connection.php';
+require 'lib/functions.php';
 require 'routes/links.php';
 require 'routes/folders.php';
 require 'routes/users.php';
