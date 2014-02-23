@@ -45,8 +45,6 @@ $app->get('/folders', 'getFolders');
 
 $app->get('/folders/:id', 'getFolder');
 
-$app->get('/folders/:id/tree', 'getFolderTree');
-
 $app->post('/folders', 'addFolder');
 
 $app->post('/users/authenticate', 'authenticate');

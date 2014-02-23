@@ -120,39 +120,6 @@ function getTree($folder, $userId, $db) {
 	}
 }
 
-/**
- * Get the tree of the folder
- * @param  int $id 	Folder id
- * @return json     The tree
- */
-function getFolderTree($id) {
-	$app = \Slim\Slim::getInstance();
-
-	try {
-		$db = getConnection();
-
-		$userId = getUser($app->request()->get('token'), $db);
-
-		$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND id = :id AND status = 1';
-		$stmt = $db->prepare($sql);
-
-		$stmt->bindParam(':userId', $userId);
-		$stmt->bindParam(':id', $id);
-
-		$stmt->execute();
-
-		$folder = $stmt->fetch(PDO::FETCH_OBJ);
-
-		$tree = getTree($folder, $userId, $db);
-
-		unset($tree->parent_id);
-
-		echo json_encode($tree);
-	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
-	}
-}
-
 function addFolder() {
 	$app = \Slim\Slim::getInstance();
 
