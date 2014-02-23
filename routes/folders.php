@@ -32,7 +32,7 @@ function getFolders() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id = 0 AND status = 1';
+		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND parent_id IS NULL AND status = 1';
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':userId', $userId);
@@ -118,8 +118,6 @@ function getTree($folder, $userId, $db) {
 	} else {
 		return $folder;
 	}
-
-	// $folders[$i]->folders = getTree($stmt->fetchAll(PDO::FETCH_OBJ), $userId, $db);
 }
 
 /**
@@ -167,7 +165,7 @@ function addFolder() {
 		$stmt = $db->prepare($sql);
 
 		$name = $app->request()->post('name');
-		$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : 0);
+		$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : null);
 
 		$stmt->bindParam(':name', $name);
 		$stmt->bindParam(':userId', $userId);

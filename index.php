@@ -37,6 +37,10 @@ $app->contentType('application/json');
 
 $app->get('/links', 'getLinks');
 
+$app->post('/links', 'addLink');
+
+$app->get('/links/search', 'search');
+
 $app->get('/folders', 'getFolders');
 
 $app->get('/folders/:id', 'getFolder');
