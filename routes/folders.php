@@ -68,39 +68,42 @@ function getFolders() {
 		$tree = array();
 		$getTree = true;
 
-		// Check if there is changes since the last time
-		if ($app->request()->get('last')) {
-			// Check that the timestamp is correct and inferior to the current timestamp
-			if (checkTimeStamp($app->request()->get('last')) and $app->request()->get('last') < time()) {
-				$sql = 'SELECT created, updated FROM folders WHERE user_id = :userId AND (created > :last OR updated > :last)';
-				$stmt = $db->prepare($sql);
+		// If the "last" parameter is used, we check if there is changes since the last time
+		if ($app->request()->get('last') != '' && checkTimeStamp($app->request()->get('last')) && $app->request()->get('last') < time()) {
+			$sql = 'SELECT count(*) AS count FROM folders WHERE user_id = :userId AND updated > :last';
+			$stmt = $db->prepare($sql);
 
-				$last = date('Y-m-d H:i:s', $app->request()->get('last'));
+			$last = date('Y-m-d H:i:s', $app->request()->get('last'));
 
-				$stmt->bindParam(':userId', $userId);
-				$stmt->bindParam(':last', $last);
+			$stmt->bindParam(':userId', $userId);
+			$stmt->bindParam(':last', $last);
 
-				$stmt->execute();
+			$stmt->execute();
 
-				$lastFolder = $stmt->fetch(PDO::FETCH_OBJ);
-
-				// print_r($lastFolder); die();
-
-				if (!empty($lastFolder)) {
-					if (!is_null($lastFolder->updated)) {
-						$lastDate = strtotime($lastFolder->updated);
-					} else {
-						$lastDate = strtotime($lastFolder->created);
-					}
-				} else {
-					$getTree = false;
-				}
-			} else {
-				throw new Exception('Wrong parameters');
+			if ($stmt->fetchColumn() == 0) {
+				$getTree = false;
 			}
 		}
-
+		
 		if ($getTree) {
+			// get the last date
+			$sql = 'SELECT MAX(updated) AS updated FROM folders WHERE user_id = :userId';
+			$stmt = $db->prepare($sql);
+
+			$stmt->bindParam(':userId', $userId);
+
+			$stmt->execute();
+
+			$lastFolder = $stmt->fetch(PDO::FETCH_OBJ);
+
+			// print_r($lastFolder); die();
+
+			if (!empty($lastFolder)) {
+				$lastDate = strtotime($lastFolder->updated);
+			}
+
+
+			// get the tree
 			$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND status = 1';
 			$stmt = $db->prepare($sql);
 
