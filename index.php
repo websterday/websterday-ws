@@ -2,6 +2,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+date_default_timezone_set('Europe/Paris');		// for 1&1
+
 require 'vendor/autoload.php';
 require 'config/connection.php';
 require 'lib/functions.php';

@@ -50,6 +50,8 @@ function createTree(&$list, $parent) {
     foreach ($parent as $k=>$l) {
         if (isset($list[$l->id])) {
             $l->folders = createTree($list, $list[$l->id]);
+        } else {
+        	$l->folders = array();
         }
         unset($l->parent_id);
         $tree[] = $l;
@@ -96,8 +98,6 @@ function getFolders() {
 
 			$lastFolder = $stmt->fetch(PDO::FETCH_OBJ);
 
-			// print_r($lastFolder); die();
-
 			if (!empty($lastFolder)) {
 				$lastDate = strtotime($lastFolder->updated);
 			}
@@ -126,9 +126,12 @@ function getFolders() {
 			$tree = createTree($new, $new[0]);
 		}
 
-		$res = array(
-			'folders' => $tree,
-		);
+
+		$res = array();
+
+		if (!empty($tree)) {
+			$res['folders'] = $tree;
+		}
 
 		if (isset($lastDate)) {
 			$res['last'] = $lastDate;
