@@ -7,7 +7,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 
-DROP TABLE IF EXISTS `folders`;
+-- DROP TABLE IF EXISTS `folders`;
 CREATE TABLE `folders` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE `folders` (
   KEY `fk_folders_folders1_idx` (`parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `links`;
+-- DROP TABLE IF EXISTS `links`;
 CREATE TABLE `links` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `url` longtext NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE `links` (
   KEY `fk_links_folders1_idx` (`folder_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `users`;
+-- DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
