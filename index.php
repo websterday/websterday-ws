@@ -42,7 +42,7 @@ $app->get('/links', 'getLinks');
 
 $app->post('/links', 'addLink');
 
-$app->get('/links/search', 'search');
+$app->get('/links/search/:value', 'search');
 
 $app->get('/folders', 'getFolders');
 

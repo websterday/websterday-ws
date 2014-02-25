@@ -19,7 +19,7 @@ function getLinks() {
 	}
 }
 
-function search() {
+function search($value) {
 	$app = \Slim\Slim::getInstance();
 
 	try {
@@ -27,23 +27,19 @@ function search() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		if (!is_null($app->request()->get('value'))) {
-			$sql = 'SELECT id, url FROM links WHERE url LIKE :url';
+		$sql = 'SELECT id, url FROM links WHERE url LIKE :url';
 
-			$stmt = $db->prepare($sql);
+		$stmt = $db->prepare($sql);
 
-			$url = '%' . $app->request()->get('value') . '%';
+		$url = '%' . $value . '%';
 
-			$stmt->bindParam(':url', $url);
+		$stmt->bindParam(':url', $url);
 
-			$stmt->execute();
+		$stmt->execute();
 
-			$links = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$links = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-			echo json_encode($links);
-		} else {
-			throw new Exception('wrong parameters');
-		}
+		echo json_encode($links);
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
@@ -64,21 +60,21 @@ function addLink() {
 		$sql = 'SELECT COUNT(*) AS exist FROM links WHERE url = "'.$url.'";';
 		$exist = $db->query($sql)->fetchColumn();
 		
-	     if ($exist) {	   // link already exist
-			 $sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url;';
-			 $stmt = $db->prepare($sql);
+		if ($exist) {	   // link already exist
+			$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url;';
+			$stmt = $db->prepare($sql);
 
-			 $stmt->bindParam(':url', $url);
+			$stmt->bindParam(':url', $url);
 		} else {		   // link doesn't exist
-			 $sql = 'INSERT INTO links (url, domain, created, updated, user_id, folder_id) VALUES (:url, :domain, NOW(), NOW(), :userId, :folderId);';
-			 $stmt = $db->prepare($sql);
+			$sql = 'INSERT INTO links (url, domain, created, updated, user_id, folder_id) VALUES (:url, :domain, NOW(), NOW(), :userId, :folderId);';
+			$stmt = $db->prepare($sql);
 
-			 $stmt->bindParam(':url', $url);
-			 $stmt->bindParam(':domain', $parsed_url['host']);
-			 $stmt->bindParam(':userId', $userId);
-			 $stmt->bindParam(':folderId', $folderId);
+			$stmt->bindParam(':url', $url);
+			$stmt->bindParam(':domain', $parsed_url['host']);
+			$stmt->bindParam(':userId', $userId);
+			$stmt->bindParam(':folderId', $folderId);
 		}
-	     echo $stmt->execute();
+		echo $stmt->execute();
 
 		
 	} catch(Exception $e) {

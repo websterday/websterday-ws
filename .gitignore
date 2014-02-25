@@ -1,5 +1,7 @@
 ### NetBeans ###
 nbproject/private/
+nbproject/project.properties
+nbproject/project.xml
 build/
 nbbuild/
 dist/
@@ -20,3 +22,7 @@ Thumbs.db
 
 ### Logs ###
 logs/*.log
+
+
+### Slim Extras ###
+/vendor/slim/extras/*
