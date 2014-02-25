@@ -57,7 +57,7 @@ function addLink() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		$sql = 'INSERT INTO links (url, domain, created, user_id, folder_id) VALUES (:url, :domain, NOW(), :userId, :folderId)';
+		$sql = 'INSERT INTO links (url, domain, created, updated, user_id, folder_id) VALUES (:url, :domain, NOW(), NOW(), :userId, :folderId)';
 		$stmt = $db->prepare($sql);
 
 		$url = $app->request()->post('url');

@@ -53,6 +53,7 @@ function createTree(&$list, $parent) {
         } else {
         	$l->folders = array();
         }
+        $l->id = (int)$l->id;
         unset($l->parent_id);
         $tree[] = $l;
     } 
