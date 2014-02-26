@@ -1,4 +1,48 @@
 <?php
+/**
+ * Create a tree recursively
+ * @param  [type] $list   [description]
+ * @param  [type] $parent [description]
+ * @return [type]         [description]
+ */
+function createLinksTree(&$folders, $parent, $db) {
+    $tree = array();
+
+    foreach ($parent as $k=>$f) {
+        if (isset($folders[$f->id])) {
+            $f->folders = createLinksTree($folders, $folders[$f->id], $db);
+        } else {
+        	$f->folders = array();
+        }
+
+        $f->id = (int)$f->id;
+
+        // Get the links
+        $sql = 'SELECT id, url FROM links WHERE folder_id = :folderId AND status = 1';
+		$stmt = $db->prepare($sql);
+
+		$stmt->bindParam(':folderId', $f->id);
+
+		$stmt->execute();
+
+		$f->links = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		// $f->links = array();
+		foreach ($f->links as $l) {
+			$l->id = (int)$l->id;
+		}
+
+        unset($f->parent_id);
+        $tree[] = $f;
+    } 
+    return $tree;
+}
+
+
+/**
+ * Get all the links with their folders
+ * @return [type] [description]
+ */
 function getLinks() {
 	$app = \Slim\Slim::getInstance();
 
@@ -7,13 +51,40 @@ function getLinks() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		$sql = 'SELECT * FROM links';
+		// get the tree
+		$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND status = 1';
+		$stmt = $db->prepare($sql);
 
-		$stmt = $db->query($sql);
+		$stmt->bindParam(':userId', $userId);
 
-		$links = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt->execute();
 
-		echo json_encode($links);
+		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		// print_r($folders); die();
+
+		$new = array();
+
+		foreach ($folders as $a){
+			if (is_null($a->parent_id)) {
+				$a->parent_id = 0;
+			}
+
+			$new[$a->parent_id][] = $a;
+		}
+
+		$tree = createLinksTree($new, $new[0], $db);
+
+		// print_r($tree); die();
+
+
+		// $sql = 'SELECT * FROM links';
+
+		// $stmt = $db->query($sql);
+
+		// $links = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		echo json_encode($tree);
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}

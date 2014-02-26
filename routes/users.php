@@ -2,15 +2,23 @@
 function authenticate() {
 	$app = \Slim\Slim::getInstance();
 
-	if (!is_null($app->request()->post('username')) and !is_null($app->request()->post('password'))) {
+	$body = json_decode($app->request()->getBody());
+
+	if ((!is_null($app->request()->post('username')) && !is_null($app->request()->post('password'))) or
+		(!is_null($body->username) && !is_null($body->password))) {
 		try {
 			$db = getConnection();
 
 			$sql = 'SELECT token FROM users WHERE username = :username AND password = :password';
 			$stmt = $db->prepare($sql);
 
-			$username = $app->request()->post('username');
-			$password = sha1($app->request()->post('password'));
+			if ((!is_null($app->request()->post('username')) && !is_null($app->request()->post('password')))) {
+				$username = $app->request()->post('username');
+				$password = sha1($app->request()->post('password'));
+			} else {
+				$username = $body->username;
+				$password = sha1($body->password);
+			}
 
 			$stmt->bindParam(':username', $username);
 			$stmt->bindParam(':password', $password);
