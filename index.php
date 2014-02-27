@@ -40,6 +40,8 @@ $app->contentType('application/json');
 
 $app->get('/links', 'getLinks');
 
+$app->get('/links/folder', 'getFolderLink');
+
 $app->post('/links', 'addLink');
 
 $app->get('/links/search/:value', 'search');

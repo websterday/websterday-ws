@@ -90,6 +90,34 @@ function getLinks() {
 	}
 }
 
+function getFolderLink() {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$userId = getUser($app->request()->get('token'), $db);
+		$url = $app->request()->get('url');
+
+		// get the links with url corresponding to the search
+		$sql = 'SELECT links.folder_id AS id, folders.name AS name FROM links LEFT JOIN folders ON links.folder_id = folders.id WHERE links.url = :url AND links.user_id = :userId';
+
+		$stmt = $db->prepare($sql);
+
+		$url = urldecode($url);
+		$stmt->bindParam(':url', $url);
+		$stmt->bindParam(':userId', $userId);
+
+		$stmt->execute();
+
+		$folder = $stmt->fetch(PDO::FETCH_OBJ);
+
+		echo json_encode($folder);
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
+	}
+}
+
 function search($value) {
 	$app = \Slim\Slim::getInstance();
 
