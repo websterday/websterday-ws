@@ -171,10 +171,11 @@ function addLink() {
 		$exist = $stmt->fetchColumn();
 		
 		if ($exist) {	   // link already exist
-			$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url;';
+			$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
 			$stmt = $db->prepare($sql);
 
 			$stmt->bindParam(':url', $url);
+			$stmt->bindParam(':userId', $userId);
 		} else {		   // link doesn't exist
 			$sql = 'INSERT INTO links (url, domain, created, updated, user_id, folder_id) VALUES (:url, :domain, NOW(), NOW(), :userId, :folderId);';
 			$stmt = $db->prepare($sql);
@@ -185,7 +186,30 @@ function addLink() {
 			$stmt->bindParam(':folderId', $folderId);
 		}
 		echo $stmt->execute();
+		
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
+	}
+}
 
+function moveLink() {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+	   $db = getConnection();
+
+	   $userId = getUser($app->request()->get('token'), $db);
+	   $url = $app->request()->post('url');
+	   $folderId = $app->request()->post('folder_id');
+	   
+	   $sql = 'UPDATE links SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
+	   $stmt = $db->prepare($sql);
+
+	   $stmt->bindParam(':url', $url);
+	   $stmt->bindParam(':userId', $userId);
+	   $stmt->bindParam(':folderId', $folderId);
+	   
+	   echo $stmt->execute();
 		
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';

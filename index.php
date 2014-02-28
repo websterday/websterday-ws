@@ -44,6 +44,8 @@ $app->get('/links/folder', 'getFolderLink');
 
 $app->post('/links', 'addLink');
 
+$app->post('/links/move', 'moveLink');
+
 $app->get('/links/search/:value', 'search');
 
 $app->get('/folders', 'getFolders');
