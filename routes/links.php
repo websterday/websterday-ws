@@ -169,7 +169,7 @@ function addLink() {
 		
 		$stmt->execute();
 
-		$exist = $stmt->fetch(PDO::FETCH_OBJ);
+		$exist = $stmt->fetch(PDO::FETCH_OBJ); 
 		
 		if ($exist && $exist->allowed) {	   // domain already exist and is allowed
 			 // Checking if the link already exist in database
@@ -183,7 +183,7 @@ function addLink() {
 
 			 $exist = $stmt->fetchColumn();
 		
-			 if ($exist) {	   // link already exist
+			 if (!empty($exist)) {	   // link already exist
 				 $sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
 				 $stmt = $db->prepare($sql);
 
