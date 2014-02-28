@@ -233,7 +233,10 @@ function addFolder() {
 		$stmt->bindParam(':userId', $userId);
 		$stmt->bindParam(':parentId', $parentId);
 		
-		echo $stmt->execute();
+		$stmt->execute();
+		
+		echo $db->lastInsertId();
+		
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
