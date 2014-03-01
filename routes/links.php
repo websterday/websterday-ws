@@ -113,6 +113,7 @@ function getFolderLink() {
 		$folder = $stmt->fetch(PDO::FETCH_OBJ);
 
 		echo json_encode($folder);
+		
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
@@ -161,7 +162,7 @@ function addLink() {
 		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 		
 		// Checking if the domain already exist in database
-		$sql = 'SELECT allowed FROM domains WHERE url = :url AND user_id = :userId AND status = 1';
+		$sql = 'SELECT allowed, id FROM domains WHERE url = :url AND user_id = :userId AND status = 1';
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':url', $domain);
@@ -169,9 +170,9 @@ function addLink() {
 		
 		$stmt->execute();
 
-		$exist = $stmt->fetch(PDO::FETCH_OBJ); 
+		$domain = $stmt->fetch(PDO::FETCH_OBJ); 
 		
-		if ($exist && $exist->allowed) {	   // domain already exist and is allowed
+		if ($domain && $domain->allowed) {	   // domain already exist and is allowed
 			 // Checking if the link already exist in database
 			 $sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1';
 			 $stmt = $db->prepare($sql);
@@ -181,9 +182,9 @@ function addLink() {
 
 			 $stmt->execute();
 
-			 $exist = $stmt->fetchColumn();
+			 $link = $stmt->fetchColumn();
 		
-			 if (!empty($exist)) {	   // link already exist
+			 if (!empty($link)) {	   // link already exist
 				 $sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
 				 $stmt = $db->prepare($sql);
 
@@ -194,7 +195,7 @@ function addLink() {
 				 $stmt = $db->prepare($sql);
 
 				 $stmt->bindParam(':url', $url);
-				 $stmt->bindParam(':domainId', $parsedUrl['host']);
+				 $stmt->bindParam(':domainId', $domain->id);
 				 $stmt->bindParam(':userId', $userId);
 				 $stmt->bindParam(':folderId', $folderId);
 			 }
@@ -208,7 +209,7 @@ function addLink() {
 			 
 			 echo $stmt->execute();
 			 
-		} elseif (!$exist) {			   // domain doesn't exist
+		} elseif (!$domain) {			   // domain doesn't exist
 			// Create domain
 			$sql = 'INSERT INTO domains (url, allowed, user_id, created, updated) VALUES (:url, 1, :userId, NOW(), NOW());';
 			$stmt = $db->prepare($sql);
