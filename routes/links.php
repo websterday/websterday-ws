@@ -246,7 +246,7 @@ function moveLink() {
 
 	   $userId = getUser($app->request()->get('token'), $db);
 	   $url = $app->request()->post('url');
-	   $folderId = $app->request()->post('folder_id');
+	   $folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 	   
 	   $sql = 'UPDATE links SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
 	   $stmt = $db->prepare($sql);
