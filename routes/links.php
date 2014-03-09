@@ -61,28 +61,34 @@ function getLinks() {
 
 		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-		// print_r($folders); die();
+		$new = $tree = array();
 
-		$new = array();
+		if (!empty($folders)) {
+			foreach ($folders as $a){
+				if (is_null($a->parent_id)) {
+					$a->parent_id = 0;
+				}
 
-		foreach ($folders as $a){
-			if (is_null($a->parent_id)) {
-				$a->parent_id = 0;
+				$new[$a->parent_id][] = $a;
 			}
 
-			$new[$a->parent_id][] = $a;
+			$tree['folders'] = createLinksTree($new, $new[0], $db);
 		}
 
-		$tree = createLinksTree($new, $new[0], $db);
+		// Get links in Home
+		$sql = 'SELECT id, url FROM links WHERE folder_id IS NULL AND status = 1';
+		$stmt = $db->prepare($sql);
+		$stmt->execute();
 
-		// print_r($tree); die();
+		$rootLinks = $stmt->fetchAll(PDO::FETCH_OBJ);
 
+		if (!empty($rootLinks)) {
+			foreach ($rootLinks as $l) {
+				$l->id = (int)$l->id;
+			}
 
-		// $sql = 'SELECT * FROM links';
-
-		// $stmt = $db->query($sql);
-
-		// $links = $stmt->fetchAll(PDO::FETCH_OBJ);
+			$tree['links'] = $rootLinks;
+		}
 
 		echo json_encode($tree);
 	} catch(Exception $e) {

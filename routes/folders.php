@@ -103,7 +103,6 @@ function getFolders() {
 				$lastDate = strtotime($lastFolder->updated);
 			}
 
-
 			// get the tree
 			$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND status = 1';
 			$stmt = $db->prepare($sql);
@@ -116,15 +115,19 @@ function getFolders() {
 
 			$new = array();
 
-			foreach ($folders as $a){
-				if (is_null($a->parent_id)) {
-					$a->parent_id = 0;
+			if (!empty($folders)) {
+				foreach ($folders as $a){
+					if (is_null($a->parent_id)) {
+						$a->parent_id = 0;
+					}
+
+					$new[$a->parent_id][] = $a;
 				}
 
-				$new[$a->parent_id][] = $a;
+				$tree = createTree($new, $new[0]);
+			} else {
+				$tree = array();
 			}
-
-			$tree = createTree($new, $new[0]);
 		}
 
 
