@@ -176,9 +176,9 @@ function addLink() {
 		
 		$stmt->execute();
 
-		$domain = $stmt->fetch(PDO::FETCH_OBJ); 
+		$domainResult = $stmt->fetch(PDO::FETCH_OBJ); 
 		
-		if ($domain && $domain->allowed) {	   // domain already exist and is allowed
+		if ($domainResult && $domainResult->allowed) {	   // domain already exist and is allowed
 			 // Checking if the link already exist in database
 			 $sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1';
 			 $stmt = $db->prepare($sql);
@@ -215,7 +215,7 @@ function addLink() {
 			 
 			 echo $stmt->execute();
 			 
-		} elseif (!$domain) {			   // domain doesn't exist
+		} elseif (!$domainResult) {			   // domain doesn't exist
 			// Create domain
 			$sql = 'INSERT INTO domains (url, allowed, user_id, created, updated) VALUES (:url, 1, :userId, NOW(), NOW());';
 			$stmt = $db->prepare($sql);
