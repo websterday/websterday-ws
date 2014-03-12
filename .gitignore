@@ -24,8 +24,9 @@ Thumbs.db
 logs/*.log
 
 
-### Slim Extras ###
-/vendor/slim/extras/*
+### Composer ###
+/vendor/*
+composer.lock
 
 ## Database config ##
 /config/connection.php
