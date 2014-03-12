@@ -26,3 +26,6 @@ logs/*.log
 
 ### Slim Extras ###
 /vendor/slim/extras/*
+
+## Database config ##
+/config/connection.php
