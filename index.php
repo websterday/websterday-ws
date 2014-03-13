@@ -38,7 +38,9 @@ $app->configureMode('development', function () use ($app) {
 
 $app->contentType('application/json');
 
-$app->get('/links', 'getLinks');
+$app->get('/links/folder/', 'getLinks');
+
+$app->get('/links/folder/:folderId', 'getLinks');
 
 $app->get('/links/folder', 'getFolderLink');
 

@@ -1,49 +1,11 @@
 <?php
-/**
- * Create a tree recursively
- * @param  [type] $list   [description]
- * @param  [type] $parent [description]
- * @return [type]         [description]
- */
-function createLinksTree(&$folders, $parent, $db) {
-    $tree = array();
-
-    foreach ($parent as $k=>$f) {
-        if (isset($folders[$f->id])) {
-            $f->folders = createLinksTree($folders, $folders[$f->id], $db);
-        } else {
-        	$f->folders = array();
-        }
-
-        $f->id = (int)$f->id;
-
-        // Get the links
-        $sql = 'SELECT id, url FROM links WHERE folder_id = :folderId AND status = 1';
-		$stmt = $db->prepare($sql);
-
-		$stmt->bindParam(':folderId', $f->id);
-
-		$stmt->execute();
-
-		$f->links = $stmt->fetchAll(PDO::FETCH_OBJ);
-
-		// $f->links = array();
-		foreach ($f->links as $l) {
-			$l->id = (int)$l->id;
-		}
-
-        unset($f->parent_id);
-        $tree[] = $f;
-    } 
-    return $tree;
-}
-
 
 /**
- * Get all the links with their folders
- * @return [type] [description]
+ * Get the links and folders of a folder
+ * @param  int $folderId The concerned folder (if null => root)
+ * @return [type]           [description]
  */
-function getLinks() {
+function getLinks($folderId = null) {
 	$app = \Slim\Slim::getInstance();
 
 	try {
@@ -51,48 +13,84 @@ function getLinks() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		// get the tree
-		$sql = 'SELECT id, name, parent_id FROM folders WHERE user_id = :userId AND status = 1';
+		if (!is_null($folderId)) {
+			$sql = 'SELECT parent_id FROM folders WHERE id = :folderId AND status = 1';
+
+			$stmt = $db->prepare($sql);
+
+			$stmt->bindParam(':folderId', $folderId);
+
+			$stmt->execute();
+
+			$folder = $stmt->fetch(PDO::FETCH_OBJ);
+		}
+
+		// get the folders
+		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND status = 1';
+
+		if (!is_null($folderId)) {
+			$sql .= ' AND parent_id = :folderId';
+		}
+		
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':userId', $userId);
 
-		$stmt->execute();
-
-		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
-
-		$new = $tree = array();
-
-		if (!empty($folders)) {
-			foreach ($folders as $a){
-				if (is_null($a->parent_id)) {
-					$a->parent_id = 0;
-				}
-
-				$new[$a->parent_id][] = $a;
-			}
-
-			$tree['folders'] = createLinksTree($new, $new[0], $db);
+		if (!is_null($folderId)) {
+			$stmt->bindParam(':folderId', $folderId);
 		}
 
-		// Get links in Home
-		$sql = 'SELECT id, url FROM links WHERE folder_id IS NULL AND status = 1';
-		$stmt = $db->prepare($sql);
 		$stmt->execute();
 
-		$rootLinks = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$tree['folders'] = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-		if (!empty($rootLinks)) {
-			foreach ($rootLinks as $l) {
-				$l->id = (int)$l->id;
-			}
+		// Get links in Home
+		
+		if (!is_null($folderId)) {
+			$sql = 'SELECT id, url FROM links WHERE folder_id = :folderId AND status = 1';
+		} else {
+			$sql = 'SELECT id, url FROM links WHERE folder_id IS NULL AND status = 1';
+		}
 
-			$tree['links'] = $rootLinks;
+		$stmt = $db->prepare($sql);
+
+		if (!is_null($folderId)) {
+			$stmt->bindParam(':folderId', $folderId);
+		}
+
+		$stmt->execute();
+
+		$tree['links'] = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		// Get the breadcrumb
+		if (isset($folder->parent_id) and !is_null($folder->parent_id)) {
+			$tree['breadcrumb'] = array();
+			getParentFolder($tree['breadcrumb'], $folder->parent_id, $db);
 		}
 
 		echo json_encode($tree);
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
+	}
+}
+
+function getParentFolder(&$tree, $id, $db) {
+	$sql = 'SELECT id, name, parent_id FROM folders WHERE id = :parentId';
+
+	$stmt = $db->prepare($sql);
+
+	$stmt->bindParam(':parentId', $id);
+
+	$stmt->execute();
+
+	$folder = $stmt->fetch(PDO::FETCH_OBJ);
+
+	if (!empty($folder)) {
+		getParentFolder($tree, $folder->parent_id, $db);
+
+		unset($folder->parent_id);
+
+		$tree[] = $folder;
 	}
 }
 

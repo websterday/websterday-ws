@@ -60,7 +60,7 @@ function createTree(&$list, $parent) {
     return $tree;
 }
 
-function getFolders() {
+function getFolders($folderId = null) {
 	$app = \Slim\Slim::getInstance();
 
 	try {
