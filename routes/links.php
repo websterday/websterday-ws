@@ -167,8 +167,8 @@ function addLink() {
 
 		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 		
-		// Checking if the domain already exist in database
-		$sql = 'SELECT allowed, id FROM domains WHERE url = :url AND user_id = :userId AND status = 1';
+		// Checking if the domain already exist in database and is enabled for the user
+		$sql = 'SELECT allowed, d.id FROM domains d LEFT JOIN domains_users du ON d.id = domain_id AND du.status = 1 AND user_id = :userId WHERE url = :url AND d.status = 1;;';
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':url', $domain);
@@ -176,11 +176,11 @@ function addLink() {
 		
 		$stmt->execute();
 
-		$domainResult = $stmt->fetch(PDO::FETCH_OBJ); 
+		$domainResult = $stmt->fetch(PDO::FETCH_OBJ);
 		
 		if ($domainResult && $domainResult->allowed) {	   // domain already exist and is allowed
 			 // Checking if the link already exist in database
-			 $sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1';
+			 $sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1;';
 			 $stmt = $db->prepare($sql);
 
 			 $stmt->bindParam(':url', $url);
@@ -205,7 +205,7 @@ function addLink() {
 				 $stmt->bindParam(':userId', $userId);
 				 $stmt->bindParam(':folderId', $folderId);
 			 }
-			 echo $stmt->execute();
+			 $stmt->execute();
 		    
 			 $sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
 			 $stmt = $db->prepare($sql);
@@ -215,28 +215,39 @@ function addLink() {
 			 
 			 echo $stmt->execute();
 			 
-		} elseif (!$domainResult) {			   // domain doesn't exist
-			// Create domain
-			$sql = 'INSERT INTO domains (url, allowed, user_id, created, updated) VALUES (:url, 1, :userId, NOW(), NOW());';
-			$stmt = $db->prepare($sql);
+		} elseif (is_null($domainResult->allowed)) {			   // domain doesn't exist for the user or not at all
+			if (isset($domainResult->id)) {
+				$domainId = $domainResult->id;
+			} else {			// new domain
+				$sql = 'INSERT INTO domains (url, created, updated) VALUES (:url, NOW(), NOW());';
+				$stmt = $db->prepare($sql);
 
-			$stmt->bindParam(':url', $domain);
-			$stmt->bindParam(':userId', $userId);
-			 
-			echo $stmt->execute();
+				$stmt->bindParam(':url', $domain);
+
+				$stmt->execute();
+
+				$domainId = $db->lastInsertId();
+			}
+
+			// Link the domain to the user
+			// $sql = 'INSERT INTO domains_users (created, updated, domain_id, user_id) VALUES (NOW(), NOW(), :domainId, :userId);';
+			// $stmt = $db->prepare($sql);
+
+			// $stmt->bindParam(':domainId', $domainId);
+			// $stmt->bindParam(':userId', $userId);
+
+			// $stmt->execute();
 			
-			// Create link
+			// Create the link
 			$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
 			$stmt = $db->prepare($sql);
-			$lastInsertId = $db->lastInsertId();
 
 			$stmt->bindParam(':url', $url);
-			$stmt->bindParam(':domainId', $lastInsertId);
+			$stmt->bindParam(':domainId', $domainId);
 			$stmt->bindParam(':userId', $userId);
 			$stmt->bindParam(':folderId', $folderId);
 			 
 			echo $stmt->execute();
-			
 		}
 		
 	} catch(Exception $e) {
