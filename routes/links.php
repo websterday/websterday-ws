@@ -13,8 +13,10 @@ function getLinks($folderId = null) {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
+		$tree = array();
+
 		if (!is_null($folderId)) {
-			$sql = 'SELECT parent_id FROM folders WHERE id = :folderId AND status = 1';
+			$sql = 'SELECT name, parent_id FROM folders WHERE id = :folderId AND status = 1';
 
 			$stmt = $db->prepare($sql);
 
@@ -23,13 +25,19 @@ function getLinks($folderId = null) {
 			$stmt->execute();
 
 			$folder = $stmt->fetch(PDO::FETCH_OBJ);
+
+			if (!empty($folder)) {
+				$tree['folder'] = array('name' => $folder->name);
+			}
 		}
 
 		// get the folders
-		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND status = 1';
+		$sql = 'SELECT id, name, created, updated FROM folders WHERE user_id = :userId AND status = 1';
 
 		if (!is_null($folderId)) {
 			$sql .= ' AND parent_id = :folderId';
+		} else {
+			$sql .= ' AND parent_id IS NULL';
 		}
 		
 		$stmt = $db->prepare($sql);
@@ -42,14 +50,27 @@ function getLinks($folderId = null) {
 
 		$stmt->execute();
 
-		$tree['folders'] = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		foreach ($folders as $f) {
+			if ($f->updated) {
+				$f->date = strtotime($f->updated);
+			} else {
+				$f->date = strtotime($f->created);
+			}
+
+			unset($f->created);
+			unset($f->updated);
+		}
+
+		$tree['folders'] = $folders;
 
 		// Get links in Home
 		
 		if (!is_null($folderId)) {
-			$sql = 'SELECT id, url FROM links WHERE folder_id = :folderId AND status = 1';
+			$sql = 'SELECT id, url, created, updated FROM links WHERE folder_id = :folderId AND status = 1';
 		} else {
-			$sql = 'SELECT id, url FROM links WHERE folder_id IS NULL AND status = 1';
+			$sql = 'SELECT id, url, created, updated FROM links WHERE folder_id IS NULL AND status = 1';
 		}
 
 		$stmt = $db->prepare($sql);
@@ -60,7 +81,20 @@ function getLinks($folderId = null) {
 
 		$stmt->execute();
 
-		$tree['links'] = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$links = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		foreach ($links as $l) {
+			if (is_null($l->updated)) {
+				$l->date = strtotime($l->updated);
+			} else {
+				$l->date = strtotime($l->created);
+			}
+
+			unset($l->created);
+			unset($l->updated);
+		}
+
+		$tree['links'] = $links;
 
 		// Get the breadcrumb
 		if (isset($folder->parent_id) and !is_null($folder->parent_id)) {
@@ -162,6 +196,8 @@ function addLink() {
 
 		$parsedUrl = parse_url($url);
 		$domain = $parsedUrl['host'];
+
+		// TODO check if the link is already in the db
 
 		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 		
