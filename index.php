@@ -46,6 +46,8 @@ $app->get('/links/folder', 'getFolderLink');
 
 $app->post('/links', 'addLink');
 
+$app->post('/links/', 'addLink');
+
 $app->post('/links/move', 'moveLink');
 
 $app->get('/links/search/:value', 'search');
@@ -55,6 +57,8 @@ $app->get('/folders', 'getFolders');
 $app->get('/folders/:id', 'getFolder');
 
 $app->post('/folders', 'addFolder');
+
+$app->put('/folders/:id', 'updateFolder');
 
 $app->post('/users/authenticate', 'authenticate');
 

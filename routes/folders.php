@@ -244,3 +244,42 @@ function addFolder() {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
 }
+
+function updateFolder($id) {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$userId = getUser($app->request()->get('token'), $db);
+
+		$json = json_decode($app->getInstance()->request()->getBody());
+
+		if (isset($json->name)) {
+			// Check if the folder exists
+			$sql = 'SELECT COUNT(*) FROM folders WHERE id = :id AND user_id = :userId AND status = 1';
+			$stmt = $db->prepare($sql);
+
+			$stmt->bindParam(':id', $id);
+			$stmt->bindParam(':userId', $userId);
+
+			$stmt->execute();
+
+			if ($stmt->fetchColumn() > 0) {
+				$sql = 'UPDATE folders SET name = :name, updated = NOW() WHERE id = :id';
+				$stmt = $db->prepare($sql);
+
+				$stmt->bindParam(':name', $json->name);
+				$stmt->bindParam(':id', $id);
+
+				$stmt->execute();
+			} else {
+				echo '{"error":"Wrong parameters"}';
+			}
+		} else {
+			echo '{"error":"Wrong parameters"}';
+		}
+	} catch(Exception $e) {
+		echo '{"error":"' . $e->getMessage() . '"}';
+	}
+}

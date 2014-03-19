@@ -59,6 +59,8 @@ function getLinks($folderId = null) {
 				$f->date = strtotime($f->created);
 			}
 
+			$f->date = time();
+
 			unset($f->created);
 			unset($f->updated);
 		}
@@ -192,98 +194,155 @@ function addLink() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		$url = $app->request()->post('url');
+		$json = json_decode($app->getInstance()->request()->getBody());
 
-		$parsedUrl = parse_url($url);
-		$domain = $parsedUrl['host'];
+		$validParams = false;
 
-		// TODO check if the link is already in the db
+		if (!is_null($app->request()->post('url'))) {
+			$url = $app->request()->post('url');
 
-		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
-		
-		// Checking if the domain already exist in database and is enabled for the user
-		$sql = 'SELECT allowed, d.id FROM domains d LEFT JOIN domains_users du ON d.id = domain_id AND du.status = 1 AND user_id = :userId WHERE url = :url AND d.status = 1;;';
-		$stmt = $db->prepare($sql);
+			$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 
-		$stmt->bindParam(':url', $domain);
-		$stmt->bindParam(':userId', $userId);
-		
-		$stmt->execute();
+			$validParams = true;
+		} else {
+			$json = json_decode($app->getInstance()->request()->getBody());
 
-		$domainResult = $stmt->fetch(PDO::FETCH_OBJ);
-		
-		if ($domainResult && $domainResult->allowed) {	   // domain already exist and is allowed
-			 // Checking if the link already exist in database
-			 $sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1;';
-			 $stmt = $db->prepare($sql);
+			if (isset($json->url)) {
+				$url = $json->url;
 
-			 $stmt->bindParam(':url', $url);
-			 $stmt->bindParam(':userId', $userId);
+				$validParams = true;
+			}
 
-			 $stmt->execute();
+			if (isset($json->folder_id)) {
+				$folderId = $json->folder_id;
+			} else {
+				$folderId = null;
+			}
+		}
 
-			 $link = $stmt->fetchColumn();
-		
-			 if (!empty($link)) {	   // link already exist
-				 $sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
-				 $stmt = $db->prepare($sql);
+		if ($validParams) {
+			$parsedUrl = parse_url($url);
 
-				 $stmt->bindParam(':url', $url);
-				 $stmt->bindParam(':userId', $userId);
-			 } else {		   // link doesn't exist
-				 $sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
-				 $stmt = $db->prepare($sql);
+			if (isset($parsedUrl['host'])) {
+				$domain = $parsedUrl['host'];
 
-				 $stmt->bindParam(':url', $url);
-				 $stmt->bindParam(':domainId', $domain->id);
-				 $stmt->bindParam(':userId', $userId);
-				 $stmt->bindParam(':folderId', $folderId);
-			 }
-			 $stmt->execute();
-		    
-			 $sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
-			 $stmt = $db->prepare($sql);
-
-			 $stmt->bindParam(':url', $url);
-			 $stmt->bindParam(':userId', $userId);
-			 
-			 echo $stmt->execute();
-			 
-		} elseif (is_null($domainResult->allowed)) {			   // domain doesn't exist for the user or not at all
-			if (isset($domainResult->id)) {
-				$domainId = $domainResult->id;
-			} else {			// new domain
-				$sql = 'INSERT INTO domains (url, created, updated) VALUES (:url, NOW(), NOW());';
+				// TODO check if the link is already in the db
+				
+				// Checking if the domain already exist in database and is enabled for the user
+				$sql = 'SELECT allowed, d.id FROM domains d LEFT JOIN domains_users du ON d.id = domain_id AND du.status = 1 AND user_id = :userId WHERE url = :url AND d.status = 1;;';
 				$stmt = $db->prepare($sql);
 
 				$stmt->bindParam(':url', $domain);
-
+				$stmt->bindParam(':userId', $userId);
+				
 				$stmt->execute();
 
-				$domainId = $db->lastInsertId();
+				$domainResult = $stmt->fetch(PDO::FETCH_OBJ);
+				
+				if ($domainResult && $domainResult->allowed) {	   // domain already exist and is allowed
+					// Checking if the link already exist in database
+					$sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1;';
+					$stmt = $db->prepare($sql);
+
+					$stmt->bindParam(':url', $url);
+					$stmt->bindParam(':userId', $userId);
+
+					$stmt->execute();
+
+					$link = $stmt->fetchColumn();
+
+					if (!empty($link)) {	   // link already exist
+						$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
+						$stmt = $db->prepare($sql);
+
+						$stmt->bindParam(':url', $url);
+						$stmt->bindParam(':userId', $userId);
+					} else {			// link doesn't exist
+						$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
+						$stmt = $db->prepare($sql);
+
+						$stmt->bindParam(':url', $url);
+						$stmt->bindParam(':domainId', $domain->id);
+						$stmt->bindParam(':userId', $userId);
+						$stmt->bindParam(':folderId', $folderId);
+					}
+					$stmt->execute();
+
+					$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
+					$stmt = $db->prepare($sql);
+
+					$stmt->bindParam(':url', $url);
+					$stmt->bindParam(':userId', $userId);
+
+					$stmt->execute();
+
+					// get infos
+					$lastInsertId = $db->lastInsertId();
+
+					$sql = 'SELECT id, url, created, updated FROM links WHERE id = :id AND status = 1;';
+					$stmt = $db->prepare($sql);
+
+					$stmt->bindParam(':id', $lastInsertId);
+
+					$stmt->execute();
+
+					$link = array('link' => $stmt->fetch(PDO::FETCH_OBJ));
+
+					echo json_encode($link);
+				} elseif (!$domainResult || is_null($domainResult->allowed)) {			   // domain doesn't exist for the user or not at all
+					if (isset($domainResult->id)) {
+						$domainId = $domainResult->id;
+					} else {			// new domain
+						$sql = 'INSERT INTO domains (url, created, updated) VALUES (:url, NOW(), NOW());';
+						$stmt = $db->prepare($sql);
+
+						$stmt->bindParam(':url', $domain);
+
+						$stmt->execute();
+
+						$domainId = $db->lastInsertId();
+					}
+
+					// Link the domain to the user
+					// $sql = 'INSERT INTO domains_users (created, updated, domain_id, user_id) VALUES (NOW(), NOW(), :domainId, :userId);';
+					// $stmt = $db->prepare($sql);
+
+					// $stmt->bindParam(':domainId', $domainId);
+					// $stmt->bindParam(':userId', $userId);
+
+					// $stmt->execute();
+					
+					// Create the link
+					$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
+					$stmt = $db->prepare($sql);
+
+					$stmt->bindParam(':url', $url);
+					$stmt->bindParam(':domainId', $domainId);
+					$stmt->bindParam(':userId', $userId);
+					$stmt->bindParam(':folderId', $folderId);
+					 
+					$stmt->execute();
+
+					// get infos
+					$lastInsertId = $db->lastInsertId();
+
+					$sql = 'SELECT id, url, created, updated FROM links WHERE id = :id AND status = 1;';
+					$stmt = $db->prepare($sql);
+
+					$stmt->bindParam(':id', $lastInsertId);
+
+					$stmt->execute();
+
+					$link = array('link' => $stmt->fetch(PDO::FETCH_OBJ));
+
+					echo json_encode($link);
+				}
+			} else {
+				echo '{"error":"Wrong url"}';
 			}
-
-			// Link the domain to the user
-			// $sql = 'INSERT INTO domains_users (created, updated, domain_id, user_id) VALUES (NOW(), NOW(), :domainId, :userId);';
-			// $stmt = $db->prepare($sql);
-
-			// $stmt->bindParam(':domainId', $domainId);
-			// $stmt->bindParam(':userId', $userId);
-
-			// $stmt->execute();
-			
-			// Create the link
-			$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
-			$stmt = $db->prepare($sql);
-
-			$stmt->bindParam(':url', $url);
-			$stmt->bindParam(':domainId', $domainId);
-			$stmt->bindParam(':userId', $userId);
-			$stmt->bindParam(':folderId', $folderId);
-			 
-			echo $stmt->execute();
+		} else {
+			echo '{"error":"Wrong parameters"}';
 		}
-		
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
