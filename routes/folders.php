@@ -226,19 +226,43 @@ function addFolder() {
 
 		$userId = getUser($app->request()->get('token'), $db);
 
-		$sql = 'INSERT INTO folders (name, created, user_id, parent_id) VALUES (:name, NOW(), :userId, :parentId)';
+		$created = date('Y-m-d H:i:s');
+
+		$sql = 'INSERT INTO folders (name, created, user_id, parent_id) VALUES (:name, :created, :userId, :parentId)';
 		$stmt = $db->prepare($sql);
 
-		$name = $app->request()->post('name');
-		$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : null);
+		if ($app->request()->post('name')) {
+			$name = $app->request()->post('name');
+
+			$parentId = ($app->request()->post('parent_id') ? $app->request()->post('parent_id') : null);
+		} else {
+			$json = json_decode($app->getInstance()->request()->getBody());
+
+			if (isset($json->name)) {
+				$name = $json->name;
+			}
+
+			if (isset($json->parent_id)) {
+				$parentId = $json->parent_id;
+			} else {
+				$parentId = null;
+			}
+		}
 
 		$stmt->bindParam(':name', $name);
+		$stmt->bindParam(':created', $created);
 		$stmt->bindParam(':userId', $userId);
 		$stmt->bindParam(':parentId', $parentId);
 		
 		$stmt->execute();
-		
-		echo $db->lastInsertId();
+
+		$folder = array(
+			'id'   => $db->lastInsertId(),
+			'name' => $name,
+			'date' => strtotime($created)
+		);
+
+		echo json_encode(array('folder' => $folder));
 		
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';

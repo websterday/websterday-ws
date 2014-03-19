@@ -241,54 +241,59 @@ function addLink() {
 				
 				if ($domainResult && $domainResult->allowed) {	   // domain already exist and is allowed
 					// Checking if the link already exist in database
-					$sql = 'SELECT * FROM links WHERE url = :url AND user_id = :userId AND status = 1;';
+					$sql = 'SELECT id FROM links WHERE url = :url AND user_id = :userId AND status = 1';
+
+					if (!is_null($folderId)) {
+						$sql .= ' AND folder_id = :folderId';
+					} else {
+						$sql .= ' AND folder_id IS NULL';
+					}
+
 					$stmt = $db->prepare($sql);
 
 					$stmt->bindParam(':url', $url);
 					$stmt->bindParam(':userId', $userId);
+
+					if (!is_null($folderId)) {
+						$stmt->bindParam(':folderId', $folderId);
+					}
 
 					$stmt->execute();
 
 					$link = $stmt->fetchColumn();
 
-					if (!empty($link)) {	   // link already exist
-						$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
+					$date = date('Y-m-d H:i:s');
+
+					if ($link) {	   // link already exist
+						$sql = 'UPDATE links SET count = count + 1, updated = :updated WHERE id = :id;';
 						$stmt = $db->prepare($sql);
 
-						$stmt->bindParam(':url', $url);
-						$stmt->bindParam(':userId', $userId);
+						$stmt->bindParam(':id', $link);
+						$stmt->bindParam(':updated', $date);
+						$stmt->bindParam(':id', $link);
+						$stmt->execute();
+
+						echo 1;
 					} else {			// link doesn't exist
-						$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
+						$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, :created, :updated, :userId, :folderId);';
 						$stmt = $db->prepare($sql);
 
 						$stmt->bindParam(':url', $url);
-						$stmt->bindParam(':domainId', $domain->id);
+						$stmt->bindParam(':domainId', $domainResult->id);
 						$stmt->bindParam(':userId', $userId);
+						$stmt->bindParam(':created', $date);
+						$stmt->bindParam(':updated', $date);
 						$stmt->bindParam(':folderId', $folderId);
+						$stmt->execute();
+
+						$link = array(
+							'id'   => $db->lastInsertId(),
+							'url'  => $url,
+							'date' => strtotime($date)
+						);
+
+						echo json_encode(array('link' => $link));
 					}
-					$stmt->execute();
-
-					$sql = 'UPDATE links SET count = count + 1, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
-					$stmt = $db->prepare($sql);
-
-					$stmt->bindParam(':url', $url);
-					$stmt->bindParam(':userId', $userId);
-
-					$stmt->execute();
-
-					// get infos
-					$lastInsertId = $db->lastInsertId();
-
-					$sql = 'SELECT id, url, created, updated FROM links WHERE id = :id AND status = 1;';
-					$stmt = $db->prepare($sql);
-
-					$stmt->bindParam(':id', $lastInsertId);
-
-					$stmt->execute();
-
-					$link = array('link' => $stmt->fetch(PDO::FETCH_OBJ));
-
-					echo json_encode($link);
 				} elseif (!$domainResult || is_null($domainResult->allowed)) {			   // domain doesn't exist for the user or not at all
 					if (isset($domainResult->id)) {
 						$domainId = $domainResult->id;
@@ -302,40 +307,29 @@ function addLink() {
 
 						$domainId = $db->lastInsertId();
 					}
-
-					// Link the domain to the user
-					// $sql = 'INSERT INTO domains_users (created, updated, domain_id, user_id) VALUES (NOW(), NOW(), :domainId, :userId);';
-					// $stmt = $db->prepare($sql);
-
-					// $stmt->bindParam(':domainId', $domainId);
-					// $stmt->bindParam(':userId', $userId);
-
-					// $stmt->execute();
+					
+					$date = date('Y-m-d H:i:s');
 					
 					// Create the link
-					$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, NOW(), NOW(), :userId, :folderId);';
+					$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, :created, :updated, :userId, :folderId);';
 					$stmt = $db->prepare($sql);
 
 					$stmt->bindParam(':url', $url);
 					$stmt->bindParam(':domainId', $domainId);
+					$stmt->bindParam(':created', $date);
+					$stmt->bindParam(':updated', $date);
 					$stmt->bindParam(':userId', $userId);
 					$stmt->bindParam(':folderId', $folderId);
 					 
 					$stmt->execute();
 
-					// get infos
-					$lastInsertId = $db->lastInsertId();
+					$link = array(
+						'id'   => $db->lastInsertId(),
+						'url'  => $url,
+						'date' => strtotime($date)
+					);
 
-					$sql = 'SELECT id, url, created, updated FROM links WHERE id = :id AND status = 1;';
-					$stmt = $db->prepare($sql);
-
-					$stmt->bindParam(':id', $lastInsertId);
-
-					$stmt->execute();
-
-					$link = array('link' => $stmt->fetch(PDO::FETCH_OBJ));
-
-					echo json_encode($link);
+					echo json_encode(array('link' => $link));
 				}
 			} else {
 				echo '{"error":"Wrong url"}';

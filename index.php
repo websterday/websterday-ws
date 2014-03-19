@@ -58,6 +58,8 @@ $app->get('/folders/:id', 'getFolder');
 
 $app->post('/folders', 'addFolder');
 
+$app->post('/folders/', 'addFolder');
+
 $app->put('/folders/:id', 'updateFolder');
 
 $app->post('/users/authenticate', 'authenticate');
