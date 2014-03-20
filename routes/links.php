@@ -366,6 +366,16 @@ function moveLink() {
 	}
 }
 
+function deleteLinkRequest($id, $userId, $db) {
+	$sql = 'UPDATE links SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
+	$stmt = $db->prepare($sql);
+
+	$stmt->bindParam(':id', $id);
+	$stmt->bindParam(':userId', $userId);
+
+	return $stmt->execute();
+}
+
 function deleteLink($id) {
 	$app = \Slim\Slim::getInstance();
 
@@ -374,13 +384,42 @@ function deleteLink($id) {
 
 	   $userId = getUser($app->request()->get('token'), $db);
 	   
-	   $sql = 'UPDATE links SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
-	   $stmt = $db->prepare($sql);
+	   echo deleteLinkRequest($id, $userId, $db);
 
-	   $stmt->bindParam(':id', $id);
-	   $stmt->bindParam(':userId', $userId);
-	   
-	   echo $stmt->execute();
+	} catch(Exception $e) {
+		error($e->getMessage());
+	}
+}
+
+function deleteMultipleLinks() {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$userId = getUser($app->request()->get('token'), $db);
+
+		$json = json_decode($app->getInstance()->request()->getBody());
+
+		$ok = false;
+
+		foreach($json->list->folders as $k => $v) {
+			$ok = deleteFolderRequest($k, $userId, $db);
+
+			if (!$ok) {
+				$app->log->error('error multiple delete : folder ' . $k);
+			}
+		}
+
+		foreach($json->list->links as $k => $v) {
+			$ok = deleteLinkRequest($k, $userId, $db);
+
+			if (!$ok) {
+				$app->log->error('error multiple delete : link ' . $k);
+			}
+		}
+
+		echo $ok;
 	} catch(Exception $e) {
 		error($e->getMessage());
 	}

@@ -308,21 +308,26 @@ function updateFolder($id) {
 	}
 }
 
+function deleteFolderRequest($id, $userId, $db) {
+	$sql = 'UPDATE folders SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
+	$stmt = $db->prepare($sql);
+
+	$stmt->bindParam(':id', $id);
+	$stmt->bindParam(':userId', $userId);
+
+	return $stmt->execute();
+}
+
 function deleteFolder($id) {
 	$app = \Slim\Slim::getInstance();
 
 	try {
-	   $db = getConnection();
+		$db = getConnection();
 
-	   $userId = getUser($app->request()->get('token'), $db);
-	   
-	   $sql = 'UPDATE folders SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
-	   $stmt = $db->prepare($sql);
+		$userId = getUser($app->request()->get('token'), $db);
 
-	   $stmt->bindParam(':id', $id);
-	   $stmt->bindParam(':userId', $userId);
-	   
-	   echo $stmt->execute();
+		echo delete($id, $userId, $db);
+
 	} catch(Exception $e) {
 		error($e->getMessage());
 	}

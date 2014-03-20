@@ -55,6 +55,7 @@ $app->post('/links/', 'addLink');
 $app->post('/links/move', 'moveLink');
 
 $app->delete('/links/:id', 'deleteLink');
+$app->post('/links/delete-multiple', 'deleteMultipleLinks');
 
 $app->get('/links/search/:value', 'search');
 
