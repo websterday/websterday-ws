@@ -307,3 +307,23 @@ function updateFolder($id) {
 		error($e->getMessage());
 	}
 }
+
+function deleteFolder($id) {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+	   $db = getConnection();
+
+	   $userId = getUser($app->request()->get('token'), $db);
+	   
+	   $sql = 'UPDATE folders SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
+	   $stmt = $db->prepare($sql);
+
+	   $stmt->bindParam(':id', $id);
+	   $stmt->bindParam(':userId', $userId);
+	   
+	   echo $stmt->execute();
+	} catch(Exception $e) {
+		error($e->getMessage());
+	}
+}

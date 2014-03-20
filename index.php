@@ -68,6 +68,8 @@ $app->post('/folders/', 'addFolder');
 
 $app->put('/folders/:id', 'updateFolder');
 
+$app->delete('/folders/:id', 'deleteFolder');
+
 // Users
 $app->post('/users/authenticate', 'authenticate');
 
