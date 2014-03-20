@@ -36,8 +36,13 @@ $app->configureMode('development', function () use ($app) {
 	));
 });
 
+$app->notFound(function () use ($app) {
+	echo 'Not found...';
+});
+
 $app->contentType('application/json');
 
+// Links
 $app->get('/links/folder/', 'getLinks');
 
 $app->get('/links/folder/:folderId', 'getLinks');
@@ -45,23 +50,25 @@ $app->get('/links/folder/:folderId', 'getLinks');
 $app->get('/links/folder', 'getFolderLink');
 
 $app->post('/links', 'addLink');
-
 $app->post('/links/', 'addLink');
 
 $app->post('/links/move', 'moveLink');
 
+$app->delete('/links/:id', 'deleteLink');
+
 $app->get('/links/search/:value', 'search');
 
+// Folders
 $app->get('/folders', 'getFolders');
 
 $app->get('/folders/:id', 'getFolder');
 
 $app->post('/folders', 'addFolder');
-
 $app->post('/folders/', 'addFolder');
 
 $app->put('/folders/:id', 'updateFolder');
 
+// Users
 $app->post('/users/authenticate', 'authenticate');
 
 $app->run();
