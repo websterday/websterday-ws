@@ -35,11 +35,11 @@ function authenticate() {
 				$app->log->error('wrong credential : ' . $username . ' - ' . $password);
 			}
 		} catch(Exception $e) {
-			echo '{"error":"' . $e->getMessage() . '"}';
+			error($e->getMessage());
 		}
 	} else {
-		echo '{"error":"wrong parameters"}';
-		$app->log->error('wrong parameters');
+		error('Wrong parameters');
+		// $app->log->error('wrong parameters');
 	}
 }
 

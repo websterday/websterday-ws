@@ -155,7 +155,7 @@ function getFolderLink() {
 		echo json_encode($folder);
 		
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
 
@@ -182,7 +182,7 @@ function search($value) {
 
 		echo json_encode($links);
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
 
@@ -264,7 +264,7 @@ function addLink() {
 
 					$date = date('Y-m-d H:i:s');
 
-					if ($link) {	   // link already exist
+					if ($link) {	   // link already exists
 						$sql = 'UPDATE links SET count = count + 1, updated = :updated WHERE id = :id;';
 						$stmt = $db->prepare($sql);
 
@@ -332,13 +332,13 @@ function addLink() {
 					echo json_encode(array('link' => $link));
 				}
 			} else {
-				echo '{"error":"Wrong url"}';
+				throw new Exception('Wrong url');
 			}
 		} else {
-			echo '{"error":"Wrong parameters"}';
+			throw new Exception('Wrong parameters');
 		}
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
 
@@ -362,6 +362,6 @@ function moveLink() {
 	   echo $stmt->execute();
 		
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }

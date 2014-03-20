@@ -17,3 +17,7 @@ function checkTimeStamp($timestamp) {
         && ($timestamp <= PHP_INT_MAX)
         && ($timestamp >= ~PHP_INT_MAX);
 }
+
+function error($message) {
+	echo '{"error":"' . $message . '"}';
+}

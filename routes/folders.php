@@ -143,7 +143,7 @@ function getFolders($folderId = null) {
 
 		echo json_encode($res);
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
 
@@ -185,7 +185,7 @@ function getFolder($id) {
 
 		echo json_encode($folder);
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
 
@@ -265,7 +265,7 @@ function addFolder() {
 		echo json_encode(array('folder' => $folder));
 		
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
 
@@ -304,6 +304,6 @@ function updateFolder($id) {
 			echo '{"error":"Wrong parameters"}';
 		}
 	} catch(Exception $e) {
-		echo '{"error":"' . $e->getMessage() . '"}';
+		error($e->getMessage());
 	}
 }
