@@ -296,12 +296,12 @@ function updateFolder($id) {
 				$stmt->bindParam(':name', $json->name);
 				$stmt->bindParam(':id', $id);
 
-				$stmt->execute();
+				echo $stmt->execute();
 			} else {
-				echo '{"error":"Wrong parameters"}';
+				throw new Exception('Wrong parameters');
 			}
 		} else {
-			echo '{"error":"Wrong parameters"}';
+			throw new Exception('Wrong parameters');
 		}
 	} catch(Exception $e) {
 		error($e->getMessage());
