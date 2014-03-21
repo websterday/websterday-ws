@@ -2,6 +2,8 @@
 $salt = '...';
 
 function authenticate() {
+	global $salt;
+
 	$app = \Slim\Slim::getInstance();
 
 	$body = json_decode($app->request()->getBody());
@@ -46,6 +48,8 @@ function authenticate() {
 }
 
 function getUser($token, $db) {
+	global $salt;
+	
 	$app = \Slim\Slim::getInstance();
 
 	if (!is_null($token)) {
