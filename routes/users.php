@@ -1,4 +1,6 @@
 <?php
+$salt = '...';
+
 function authenticate() {
 	$app = \Slim\Slim::getInstance();
 
@@ -14,10 +16,10 @@ function authenticate() {
 
 			if ((!is_null($app->request()->post('username')) && !is_null($app->request()->post('password')))) {
 				$username = $app->request()->post('username');
-				$password = sha1($app->request()->post('password'));
+				$password = sha1($app->request()->post('password') . $salt);
 			} else {
 				$username = $body->username;
-				$password = sha1($body->password);
+				$password = sha1($body->password . $salt);
 			}
 
 			$stmt->bindParam(':username', $username);
