@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Get the links and folders of a folder
- * @param  int $folderId The concerned folder (if null => root)
- * @return [type]           [description]
- */
+* Get the links and folders of a folder
+* @param  int $folderId The concerned folder (if null => root)
+* @return [type]           [description]
+*/
 function getLinks($folderId = null) {
 	$app = \Slim\Slim::getInstance();
 
@@ -31,7 +31,7 @@ function getLinks($folderId = null) {
 			}
 		}
 
-		// get the folders
+// get the folders
 		$sql = 'SELECT id, name, created, updated FROM folders WHERE user_id = :userId AND status = 1';
 
 		if (!is_null($folderId)) {
@@ -39,7 +39,7 @@ function getLinks($folderId = null) {
 		} else {
 			$sql .= ' AND parent_id IS NULL';
 		}
-		
+
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':userId', $userId);
@@ -68,7 +68,7 @@ function getLinks($folderId = null) {
 		$tree['folders'] = $folders;
 
 		// Get links in Home
-		
+
 		if (!is_null($folderId)) {
 			$sql = 'SELECT id, url, created, updated FROM links WHERE folder_id = :folderId AND status = 1';
 		} else {
@@ -153,7 +153,7 @@ function getFolderLink() {
 		$folder = $stmt->fetch(PDO::FETCH_OBJ);
 
 		echo json_encode($folder);
-		
+
 	} catch(Exception $e) {
 		error($e->getMessage());
 	}
@@ -227,18 +227,18 @@ function addLink() {
 				$domain = $parsedUrl['host'];
 
 				// TODO check if the link is already in the db
-				
+
 				// Checking if the domain already exist in database and is enabled for the user
 				$sql = 'SELECT allowed, d.id FROM domains d LEFT JOIN domains_users du ON d.id = domain_id AND du.status = 1 AND user_id = :userId WHERE url = :url AND d.status = 1;;';
 				$stmt = $db->prepare($sql);
 
 				$stmt->bindParam(':url', $domain);
 				$stmt->bindParam(':userId', $userId);
-				
+
 				$stmt->execute();
 
 				$domainResult = $stmt->fetch(PDO::FETCH_OBJ);
-				
+
 				if ($domainResult && $domainResult->allowed) {	   // domain already exist and is allowed
 					// Checking if the link already exist in database
 					$sql = 'SELECT id FROM links WHERE url = :url AND user_id = :userId AND status = 1';
@@ -290,7 +290,7 @@ function addLink() {
 							'id'   => $db->lastInsertId(),
 							'url'  => $url,
 							'date' => strtotime($date)
-						);
+							);
 
 						echo json_encode(array('link' => $link));
 					}
@@ -307,9 +307,9 @@ function addLink() {
 
 						$domainId = $db->lastInsertId();
 					}
-					
+
 					$date = date('Y-m-d H:i:s');
-					
+
 					// Create the link
 					$sql = 'INSERT INTO links (url, domain_id, created, updated, user_id, folder_id) VALUES (:url, :domainId, :created, :updated, :userId, :folderId);';
 					$stmt = $db->prepare($sql);
@@ -320,14 +320,14 @@ function addLink() {
 					$stmt->bindParam(':updated', $date);
 					$stmt->bindParam(':userId', $userId);
 					$stmt->bindParam(':folderId', $folderId);
-					 
+
 					$stmt->execute();
 
 					$link = array(
 						'id'   => $db->lastInsertId(),
 						'url'  => $url,
 						'date' => strtotime($date)
-					);
+						);
 
 					echo json_encode(array('link' => $link));
 				}
@@ -346,21 +346,21 @@ function moveLink() {
 	$app = \Slim\Slim::getInstance();
 
 	try {
-	   $db = getConnection();
+		$db = getConnection();
 
-	   $userId = getUser($app->request()->get('token'), $db);
-	   $url = $app->request()->post('url');
-	   $folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
-	   
-	   $sql = 'UPDATE links SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
-	   $stmt = $db->prepare($sql);
+		$userId = getUser($app->request()->get('token'), $db);
+		$url = $app->request()->post('url');
+		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 
-	   $stmt->bindParam(':url', $url);
-	   $stmt->bindParam(':userId', $userId);
-	   $stmt->bindParam(':folderId', $folderId);
-	   
-	   echo $stmt->execute();
-		
+		$sql = 'UPDATE links SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
+		$stmt = $db->prepare($sql);
+
+		$stmt->bindParam(':url', $url);
+		$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':folderId', $folderId);
+
+		echo $stmt->execute();
+
 	} catch(Exception $e) {
 		error($e->getMessage());
 	}
@@ -376,15 +376,44 @@ function deleteLinkRequest($id, $userId, $db) {
 	return $stmt->execute();
 }
 
+function updateLink($id) {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$userId = getUser($app->request()->get('token'), $db);
+
+		$json = json_decode($app->getInstance()->request()->getBody());
+
+		if (isset($json->id) && isset($json->url)) {
+			$sql = 'UPDATE links SET url = :url, updated = NOW() WHERE id = :id AND user_id = :userId;';
+			$stmt = $db->prepare($sql);
+
+			$stmt->bindParam(':url', $json->url);
+			$stmt->bindParam(':id', $json->id);
+			$stmt->bindParam(':userId', $userId);
+
+			echo $stmt->execute();
+		} else {
+			throw new Exception('Wrong parameters');
+		}
+
+		// echo deleteLinkRequest($id, $userId, $db);
+	} catch(Exception $e) {
+		error($e->getMessage());
+	}
+}
+
 function deleteLink($id) {
 	$app = \Slim\Slim::getInstance();
 
 	try {
-	   $db = getConnection();
+		$db = getConnection();
 
-	   $userId = getUser($app->request()->get('token'), $db);
-	   
-	   echo deleteLinkRequest($id, $userId, $db);
+		$userId = getUser($app->request()->get('token'), $db);
+
+		echo deleteLinkRequest($id, $userId, $db);
 
 	} catch(Exception $e) {
 		error($e->getMessage());

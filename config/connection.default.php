@@ -1,5 +1,7 @@
 <?php
 
+$salt = '...';
+
 function getConnection() {
 	$app = \Slim\Slim::getInstance();
 
