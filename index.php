@@ -76,5 +76,6 @@ $app->delete('/folders/:id', 'deleteFolder');
 
 // Users
 $app->post('/users/authenticate', 'authenticate');
+$app->post('/users', 'addUser');
 
 $app->run();

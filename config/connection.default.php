@@ -5,10 +5,10 @@ $salt = '...';
 function getConnection() {
 	$app = \Slim\Slim::getInstance();
 
-	$host     = 'localhost';
+	$host     = 'host';
 	$user     = 'user';
 	$password = 'password';
-	$name     = 'bookmarks';
+	$name     = 'name';
 
 	try {
 		$pdo = new PDO(

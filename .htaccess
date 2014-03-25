@@ -1,4 +1,4 @@
 RewriteEngine ON
 
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ /bookmarks-ws/index.php [QSA,L]
+RewriteRule ^ /ws/index.php [QSA,L]
