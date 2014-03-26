@@ -67,12 +67,10 @@ function getLinks($folderId = null) {
 
 		$tree['folders'] = $folders;
 
-		// Get links in Home
-
-		if (!is_null($folderId)) {
-			$sql = 'SELECT id, url, created, updated FROM links WHERE folder_id = :folderId AND status = 1';
+		if (!is_null($folderId)) {		// Get links in Home
+			$sql = 'SELECT lu.id, url, created, updated FROM links l, links_users lu WHERE folder_id = :folderId AND l.id = link_id AND status = 1';
 		} else {
-			$sql = 'SELECT id, url, created, updated FROM links WHERE folder_id IS NULL AND status = 1';
+			$sql = 'SELECT lu.id, url, created, updated FROM links l, links_users lu WHERE folder_id IS NULL AND l.id = link_id AND status = 1';
 		}
 
 		$stmt = $db->prepare($sql);
@@ -168,14 +166,14 @@ function search($value) {
 		$userId = getUser($app->request()->get('token'), $db);
 
 		// get the links with url corresponding to the search
-		$sql = 'SELECT id, url FROM links WHERE url LIKE :url';
+		$sql = 'SELECT lu.id, url, f.id folderId, title, name FROM links l, links_users lu LEFT JOIN folders f ON folder_id = f.id WHERE (url LIKE :search OR title = :search) AND l.id = link_id AND lu.user_id = :userId';
 
 		$stmt = $db->prepare($sql);
 
-		$url = '%' . $value . '%';
+		$search = '%' . $value . '%';
 
-		$stmt->bindParam(':url', $url);
-
+		$stmt->bindParam(':search', $search);
+		$stmt->bindParam(':userId', $userId);
 		$stmt->execute();
 
 		$links = $stmt->fetchAll(PDO::FETCH_OBJ);
