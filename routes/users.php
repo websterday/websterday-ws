@@ -11,7 +11,7 @@ function authenticate() {
 		try {
 			$db = getConnection();
 
-			$sql = 'SELECT token FROM users WHERE username = :username AND password = :password';
+			$sql = 'SELECT id, token FROM users WHERE username = :username AND password = :password AND status = 1';
 			$stmt = $db->prepare($sql);
 
 			if ((!is_null($app->request()->post('username')) && !is_null($app->request()->post('password')))) {
@@ -31,7 +31,7 @@ function authenticate() {
 			$db = null;
 
 			if ($user) {
-				echo '{"token": "' . $user->token . '"}';
+				echo '{"id": ' . $user->id . ', "token": "' . $user->token . '"}';
 			} else {
 				echo '{"error":"Wrong credentials"}';
 				$app->log->error('wrong credential : ' . $username . ' - ' . $password);
@@ -42,6 +42,28 @@ function authenticate() {
 	} else {
 		error('Wrong parameters');
 		// $app->log->error('wrong parameters');
+	}
+}
+
+function checkAuth($id, $token) {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$sql = 'SELECT COUNT(*) FROM users WHERE id = :id AND token = :token';
+
+		$stmt = $db->prepare($sql);
+
+		$stmt->bindParam(':id', $id);
+		$stmt->bindParam(':token', $token);
+
+		$stmt->execute();
+
+		echo $stmt->fetchColumn();
+
+	} catch(Exception $e) {
+		error($e->getMessage());
 	}
 }
 
