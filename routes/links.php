@@ -354,7 +354,7 @@ function moveLink() {
 		$url = $app->request()->post('url');
 		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 
-		$sql = 'UPDATE links SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
+		$sql = 'UPDATE links_users SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':url', $url);
@@ -369,7 +369,7 @@ function moveLink() {
 }
 
 function deleteLinkRequest($id, $userId, $db) {
-	$sql = 'UPDATE links SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
+	$sql = 'UPDATE links_users SET status = 0, updated = NOW() WHERE id = :id AND user_id = :userId;';
 	$stmt = $db->prepare($sql);
 
 	$stmt->bindParam(':id', $id);
@@ -389,7 +389,7 @@ function updateLink($id) {
 		$json = json_decode($app->getInstance()->request()->getBody());
 
 		if (isset($json->id) && isset($json->url)) {
-			$sql = 'UPDATE links SET url = :url, updated = NOW() WHERE id = :id AND user_id = :userId;';
+			$sql = 'UPDATE links_users SET url = :url, updated = NOW() WHERE id = :id AND user_id = :userId;';
 			$stmt = $db->prepare($sql);
 
 			$stmt->bindParam(':url', $json->url);
