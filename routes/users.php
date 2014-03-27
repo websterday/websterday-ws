@@ -170,3 +170,62 @@ function addUser() {
 		error($e->getMessage());
 	}
 }
+
+function forgottenPassword($email) {
+	global $salt;
+
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		$sql = 'SELECT id FROM users WHERE email = :email AND status = 1';
+
+		$stmt = $db->prepare($sql);
+
+		$stmt->bindParam(':email', $email);
+		$stmt->execute();
+
+		$user = $stmt->fetch(PDO::FETCH_OBJ);
+
+		if ($user) {
+			$newPassword = randomPassword();
+
+			$sql = 'UPDATE users u SET password = :password WHERE id = :id';
+
+			$stmt = $db->prepare($sql);
+
+			$newPasswordDb = sha1($newPassword . $salt);
+
+			$stmt->bindParam(':password', $newPasswordDb);
+			$stmt->bindParam(':id', $user->id);
+			$stmt->execute();
+
+			// Send the mail
+			$subject = 'Websterday - Forgotten password';
+			$message = "Hello,\n\nIt seems you forgot your password, here is a new one:\n\n$newPassword\n\nDon't forget to change it ;)";
+			
+			if (mail($email, $subject, $message)) {
+				echo 1;
+			} else {
+				echo 0;
+				$app->log->error('can\'t send email for forgotten password: ' . $email . ' - ' . $user->id);
+			}
+		} else {
+			throw new Exception('No account with this email');
+		}
+	} catch(Exception $e) {
+		error($e->getMessage());
+	}
+}
+
+function randomPassword() {
+	$length = 8;
+
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
