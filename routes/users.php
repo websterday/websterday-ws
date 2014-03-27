@@ -205,7 +205,7 @@ function forgottenPassword($email) {
 			$subject = 'Websterday - Forgotten password';
 			$message = "Hello,\n\nIt seems you forgot your password, here is a new one:\n\n$newPassword\n\nDon't forget to change it ;)";
 			
-			if (mail($email, $subject, $message)) {
+			if (@mail($email, $subject, $message)) {
 				echo 1;
 			} else {
 				echo 0;

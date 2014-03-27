@@ -1,15 +1,15 @@
-Bookmarks WS
+Websterday WS
 ============
 
 > Save your links for later
 
-Bookmarks WS is a simple REST API to manage links organized into folders. It is part of a global project to help you to remember where you browse.
+Websterday WS is a simple REST API to manage links organized into folders. It is part of a global project to help you to remember where you browse.
 
 The other parts are available at :
 
-Bookmarks Front - The front end part of the project (not yet available)
+[Websterday](https://github.com/websterday/websterday.git) - The front end part of the project
 
-[Bookmarks Extension](https://github.com/thisIsNotCamelCase/bookmarks-ext) - The Chrome extension to automatically save the links and set the destination folder
+[Websterday Extension](https://github.com/websterday/websterday-ext.git) - The Chrome extension to automatically save the links and set the destination folder
 
 ## Database
 
@@ -32,25 +32,7 @@ To use this API:
 | ------------------- | ------ | -------------------- |
 | /users/authenticate | GET    | Authenticate an user |
 
-### Links
-
-| URL          | Method | Description     |
-| ------------ | ------ | --------------- |
-| /links       | GET    | Links list      |
-| /links       | POST   | Create a link   |
-| /links/:id   | GET    | Link details    |
-| /links/:id   | PUT    | Edit a link     |
-| /links/:id   | DELETE | Delete a link   |
-
-### Folders
-
-| URL          | Method | Description     |
-| ------------ | ------ | --------------- |
-| /folders     | GET    | Folders list    |
-| /folders     | POST   | Create a folder |
-| /folders/:id | GET    | Folder details  |
-| /folders/:id | PUT    | Edit a folder   |
-| /folders/:id | DELETE | Delete a folder |
+To be completed...
 
 
 ### Informations
@@ -59,10 +41,10 @@ For each web service, you'll need to use the token get with /users/authenticate,
 
 ## Support
 
-For any bugs about the installation or the usage, please feel free to report [here](https://github.com/skurty/bookmarks-ws/issues).
+For any bugs about the installation or the usage, please feel free to report [here](https://github.com/websterday/websterday-ws/issues).
 
 You are welcome to fork and submit pull requests.
 
 ## License
 
-The source code is available on [GitHub](https://github.com/skurty/bookmarks-ws) under MIT license.
+The source code is available on [GitHub](https://github.com/websterday/websterday-ws) under MIT license.
