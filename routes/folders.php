@@ -66,7 +66,7 @@ function getFolders($folderId = null) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$tree = array();
 		$getTree = true;
@@ -158,7 +158,7 @@ function getFolder($id) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$sql = 'SELECT id, name FROM folders WHERE user_id = :userId AND id = :id AND status = 1';
 		$stmt = $db->prepare($sql);
@@ -224,7 +224,7 @@ function addFolder() {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$created = date('Y-m-d H:i:s');
 
@@ -275,7 +275,7 @@ function updateFolder($id) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$json = json_decode($app->getInstance()->request()->getBody());
 
@@ -324,7 +324,7 @@ function deleteFolder($id) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		echo delete($id, $userId, $db);
 

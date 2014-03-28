@@ -67,7 +67,7 @@ function checkAuth($id, $token) {
 	}
 }
 
-function getUser($token, $db) {
+function getUserId($token, $db) {
 	global $salt;
 
 	$app = \Slim\Slim::getInstance();
@@ -171,6 +171,38 @@ function addUser() {
 	}
 }
 
+function getUser($id) {
+	$app = \Slim\Slim::getInstance();
+
+	try {
+		$db = getConnection();
+
+		if (!is_null($app->request()->get('token'))) {
+			$sql = 'SELECT email FROM users WHERE id = :id AND token = :token AND status = 1';
+
+			$stmt = $db->prepare($sql);
+
+			$token = $app->request()->get('token');
+
+			$stmt->bindParam(':id', $id);
+			$stmt->bindParam(':token', $token);
+			$stmt->execute();
+
+			$user = $stmt->fetch(PDO::FETCH_OBJ);
+
+			if ($user) {
+				echo json_encode($user);
+			} else {
+				throw new Exception('Wrong parameters');
+			}
+		} else {
+			throw new Exception('Wrong parameters');
+		}
+	} catch(Exception $e) {
+		error($e->getMessage());
+	}
+}
+
 function forgottenPassword($email) {
 	global $salt;
 
@@ -189,7 +221,7 @@ function forgottenPassword($email) {
 		$user = $stmt->fetch(PDO::FETCH_OBJ);
 
 		if ($user) {
-			$newPassword = randomPassword();
+			$newPassword = randomString();
 
 			$sql = 'UPDATE users u SET password = :password WHERE id = :id';
 
@@ -205,7 +237,7 @@ function forgottenPassword($email) {
 			$subject = 'Websterday - Forgotten password';
 			$message = "Hello,\n\nIt seems you forgot your password, here is a new one:\n\n$newPassword\n\nDon't forget to change it ;)";
 			
-			if (@mail($email, $subject, $message)) {
+			if (@mail('aurelien.praga@gmail.com', $subject, $message)) {
 				echo 1;
 			} else {
 				echo 0;
@@ -217,15 +249,4 @@ function forgottenPassword($email) {
 	} catch(Exception $e) {
 		error($e->getMessage());
 	}
-}
-
-function randomPassword() {
-	$length = 8;
-
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $randomString = '';
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, strlen($characters) - 1)];
-    }
-    return $randomString;
 }

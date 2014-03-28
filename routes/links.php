@@ -11,7 +11,7 @@ function getLinks($folderId = null) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$tree = array();
 
@@ -134,7 +134,7 @@ function getFolderLink() {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 		$url = $app->request()->get('url');
 
 		// get the links with url corresponding to the search
@@ -163,7 +163,7 @@ function search($value) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		// get the links with url corresponding to the search
 		$sql = 'SELECT lu.id, url, f.id folderId, title, name FROM links l, links_users lu LEFT JOIN folders f ON folder_id = f.id WHERE (url LIKE :search OR title = :search) AND l.id = link_id AND lu.user_id = :userId';
@@ -190,7 +190,7 @@ function addLink() {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$json = json_decode($app->getInstance()->request()->getBody());
 
@@ -350,7 +350,7 @@ function moveLink() {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 		$url = $app->request()->post('url');
 		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 
@@ -384,7 +384,7 @@ function updateLink($id) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$json = json_decode($app->getInstance()->request()->getBody());
 
@@ -413,7 +413,7 @@ function deleteLink($id) {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		echo deleteLinkRequest($id, $userId, $db);
 
@@ -428,7 +428,7 @@ function deleteMultipleLinks() {
 	try {
 		$db = getConnection();
 
-		$userId = getUser($app->request()->get('token'), $db);
+		$userId = getUserId($app->request()->get('token'), $db);
 
 		$json = json_decode($app->getInstance()->request()->getBody());
 
