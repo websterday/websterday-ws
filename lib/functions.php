@@ -18,7 +18,15 @@ function checkTimeStamp($timestamp) {
         && ($timestamp >= ~PHP_INT_MAX);
 }
 
-function error($message) {
+function error($message, $line = null) {
+	$app = \Slim\Slim::getInstance();
+
+	if (is_null($line)) {
+		$app->log->error($message);
+	} else {
+		$app->log->error($line . ' : ' . $message);
+	}
+
 	echo '{"error":"' . $message . '"}';
 }
 

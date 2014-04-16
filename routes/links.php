@@ -68,9 +68,9 @@ function getLinks($folderId = null) {
 		$tree['folders'] = $folders;
 
 		if (!is_null($folderId)) {		// Get links in Home
-			$sql = 'SELECT lu.id, url, created, updated FROM links l, links_users lu WHERE folder_id = :folderId AND l.id = link_id AND status = 1';
+			$sql = 'SELECT lu.id, title, url, created, updated FROM links l, links_users lu WHERE folder_id = :folderId AND l.id = link_id AND status = 1';
 		} else {
-			$sql = 'SELECT lu.id, url, created, updated FROM links l, links_users lu WHERE folder_id IS NULL AND l.id = link_id AND status = 1';
+			$sql = 'SELECT lu.id, title, url, created, updated FROM links l, links_users lu WHERE folder_id IS NULL AND l.id = link_id AND status = 1';
 		}
 
 		$stmt = $db->prepare($sql);
@@ -153,7 +153,7 @@ function getFolderLink() {
 		echo json_encode($folder);
 
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -180,7 +180,7 @@ function search($value) {
 
 		echo json_encode($links);
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -328,7 +328,7 @@ function addLink() {
 			throw new Exception('Wrong parameters');
 		}
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -340,6 +340,8 @@ function getInfosUrl($url, &$title, &$description) {
 		$title       = $html->find('title', 0)->plaintext;
 		$description = $html->find('meta[name="description"]', 0)->content;
 	} catch (Exception $e) {
+		$app = \Slim\Slim::getInstance();
+
 		$app->log->error('can\'t get infos : ' . $url);
 	}
 }
@@ -364,7 +366,7 @@ function moveLink() {
 		echo $stmt->execute();
 
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -403,7 +405,7 @@ function updateLink($id) {
 
 		// echo deleteLinkRequest($id, $userId, $db);
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -418,7 +420,7 @@ function deleteLink($id) {
 		echo deleteLinkRequest($id, $userId, $db);
 
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -452,6 +454,6 @@ function deleteMultipleLinks() {
 
 		echo $ok;
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }

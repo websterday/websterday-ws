@@ -37,7 +37,7 @@ function authenticate() {
 				$app->log->error('wrong credential : ' . $username . ' - ' . $password);
 			}
 		} catch(Exception $e) {
-			error($e->getMessage());
+			error($e->getMessage(), $e->getLine());
 		}
 	} else {
 		error('Wrong parameters');
@@ -63,7 +63,7 @@ function checkAuth($id, $token) {
 		echo $stmt->fetchColumn();
 
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -167,7 +167,7 @@ function addUser() {
 			throw new Exception('Wrong parameters');
 		}
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -199,7 +199,7 @@ function getUser($id) {
 			throw new Exception('Wrong parameters');
 		}
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
 
@@ -247,6 +247,6 @@ function forgottenPassword($email) {
 			throw new Exception('No account with this email');
 		}
 	} catch(Exception $e) {
-		error($e->getMessage());
+		error($e->getMessage(), $e->getLine());
 	}
 }
