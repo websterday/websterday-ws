@@ -138,7 +138,7 @@ function getFolderLink() {
 		$url = $app->request()->get('url');
 
 		// get the links with url corresponding to the search
-		$sql = 'SELECT lu.folder_id AS id, f.name AS name FROM links_users lu LEFT JOIN links l ON l.id = link_id LEFT JOIN folders f ON lu.folder_id = f.id WHERE l.url = :url AND lu.user_id = :userId AND lu.status = 1 AND f.status = 1;';
+		$sql = 'SELECT lu.folder_id AS id, f.name AS name FROM links_users lu LEFT JOIN links l ON l.id = link_id LEFT JOIN folders f ON lu.folder_id = f.id WHERE l.url = :url AND lu.user_id = :userId AND lu.status = 1;';
 
 		$stmt = $db->prepare($sql);
 
