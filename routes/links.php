@@ -138,7 +138,7 @@ function getFolderLink() {
 		$url = $app->request()->get('url');
 
 		// get the links with url corresponding to the search
-		$sql = 'SELECT links.folder_id AS id, folders.name AS name FROM links LEFT JOIN folders ON links.folder_id = folders.id WHERE links.url = :url AND links.user_id = :userId';
+		$sql = 'SELECT lu.folder_id AS id, f.name AS name FROM links_users lu LEFT JOIN links l ON l.id = link_id LEFT JOIN folders f ON lu.folder_id = f.id WHERE l.url = :url AND lu.user_id = :userId AND lu.status = 1 AND f.status = 1;';
 
 		$stmt = $db->prepare($sql);
 
@@ -353,18 +353,22 @@ function moveLink() {
 		$db = getConnection();
 
 		$userId = getUserId($app->request()->get('token'), $db);
-		$url = $app->request()->post('url');
-		$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 
-		$sql = 'UPDATE links_users SET folder_id = :folderId, updated = NOW() WHERE url = :url AND user_id = :userId AND status = 1;';
-		$stmt = $db->prepare($sql);
+		if (!is_null($app->request()->post('url'))) {
+			$url = $app->request()->post('url');
+			$folderId = ($app->request()->post('folder_id') ? $app->request()->post('folder_id') : null);
 
-		$stmt->bindParam(':url', $url);
-		$stmt->bindParam(':userId', $userId);
-		$stmt->bindParam(':folderId', $folderId);
+			$sql = 'UPDATE links_users lu, links l SET folder_id = :folderId, updated = NOW() WHERE url = :url AND l.id = link_id AND user_id = :userId AND status = 1;';
+			$stmt = $db->prepare($sql);
 
-		echo $stmt->execute();
+			$stmt->bindParam(':url', $url);
+			$stmt->bindParam(':userId', $userId);
+			$stmt->bindParam(':folderId', $folderId);
 
+			echo $stmt->execute();
+		} else {
+			throw new Exception('Wrong parameters');
+		}
 	} catch(Exception $e) {
 		error($e->getMessage(), $e->getLine());
 	}

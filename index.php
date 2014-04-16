@@ -47,7 +47,7 @@ $app->get('/links/folder/', 'getLinks');
 
 $app->get('/links/folder/:folderId', 'getLinks');
 
-$app->get('/links/folder', 'getFolderLink');
+$app->get('/links/folder-infos', 'getFolderLink');
 
 $app->post('/links', 'addLink');
 $app->post('/links/', 'addLink');
