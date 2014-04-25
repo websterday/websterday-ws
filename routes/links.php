@@ -84,7 +84,7 @@ function getLinks($folderId = null) {
 		$links = $stmt->fetchAll(PDO::FETCH_OBJ);
 
 		foreach ($links as $l) {
-			if (is_null($l->updated)) {
+			if (!is_null($l->updated)) {
 				$l->date = strtotime($l->updated);
 			} else {
 				$l->date = strtotime($l->created);
