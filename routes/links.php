@@ -13,96 +13,112 @@ function getLinks($folderId = null) {
 
 		$userId = getUserId($app->request()->get('token'), $db);
 
-		$tree = array();
-
-		if (!is_null($folderId)) {
-			$sql = 'SELECT name, parent_id FROM folders WHERE id = :folderId AND status = 1';
-
-			$stmt = $db->prepare($sql);
-
-			$stmt->bindParam(':folderId', $folderId);
-
-			$stmt->execute();
-
-			$folder = $stmt->fetch(PDO::FETCH_OBJ);
-
-			if (!empty($folder)) {
-				$tree['folder'] = array('name' => $folder->name);
-			}
-		}
-
-		// get the folders
-		$sql = 'SELECT id, name, created, updated FROM folders WHERE user_id = :userId AND status = 1';
-
-		if (!is_null($folderId)) {
-			$sql .= ' AND parent_id = :folderId';
-		} else {
-			$sql .= ' AND parent_id IS NULL';
-		}
+		$sql = 'SELECT lu.id, title, url, created FROM links l, links_users lu WHERE user_id = :userId AND l.id = link_id AND status = 1';
 
 		$stmt = $db->prepare($sql);
 
 		$stmt->bindParam(':userId', $userId);
-
-		if (!is_null($folderId)) {
-			$stmt->bindParam(':folderId', $folderId);
-		}
-
-		$stmt->execute();
-
-		$folders = $stmt->fetchAll(PDO::FETCH_OBJ);
-
-		foreach ($folders as $f) {
-			if ($f->updated) {
-				$f->date = strtotime($f->updated);
-			} else {
-				$f->date = strtotime($f->created);
-			}
-
-			$f->date = time();
-
-			unset($f->created);
-			unset($f->updated);
-		}
-
-		$tree['folders'] = $folders;
-
-		if (!is_null($folderId)) {		// Get links in Home
-			$sql = 'SELECT lu.id, title, url, created, updated FROM links l, links_users lu WHERE folder_id = :folderId AND l.id = link_id AND status = 1';
-		} else {
-			$sql = 'SELECT lu.id, title, url, created, updated FROM links l, links_users lu WHERE folder_id IS NULL AND l.id = link_id AND status = 1';
-		}
-
-		$stmt = $db->prepare($sql);
-
-		if (!is_null($folderId)) {
-			$stmt->bindParam(':folderId', $folderId);
-		}
 
 		$stmt->execute();
 
 		$links = $stmt->fetchAll(PDO::FETCH_OBJ);
 
 		foreach ($links as $l) {
-			if (!is_null($l->updated)) {
-				$l->date = strtotime($l->updated);
-			} else {
-				$l->date = strtotime($l->created);
-			}
-
-			unset($l->created);
-			unset($l->updated);
+			$l->created = strtotime($l->created);	
 		}
 
-		$tree['links'] = $links;
+		echo json_encode($links);
 
-		// Get the breadcrumb
-		if (isset($folder->parent_id) and !is_null($folder->parent_id)) {
-			$tree['breadcrumb'] = array();
-			getParentFolder($tree['breadcrumb'], $folder->parent_id, $db);
-		}
+		// $tree = array();
 
-		echo json_encode($tree);
+		// if (!is_null($folderId)) {
+		// 	$sql = 'SELECT name, parent_id FROM folders WHERE id = :folderId AND status = 1';
+
+		// 	$stmt = $db->prepare($sql);
+
+		// 	$stmt->bindParam(':folderId', $folderId);
+
+		// 	$stmt->execute();
+
+		// 	$folder = $stmt->fetch(PDO::FETCH_OBJ);
+
+		// 	if (!empty($folder)) {
+		// 		$tree['folder'] = array('name' => $folder->name);
+		// 	}
+		// }
+
+		// // get the folders
+		// $sql = 'SELECT id, name, created, updated FROM folders WHERE user_id = :userId AND status = 1';
+
+		// if (!is_null($folderId)) {
+		// 	$sql .= ' AND parent_id = :folderId';
+		// } else {
+		// 	$sql .= ' AND parent_id IS NULL';
+		// }
+
+		// $stmt = $db->prepare($sql);
+
+		// $stmt->bindParam(':userId', $userId);
+
+		// if (!is_null($folderId)) {
+		// 	$stmt->bindParam(':folderId', $folderId);
+		// }
+
+		// $stmt->execute();
+
+		// $folders = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		// foreach ($folders as $f) {
+		// 	if ($f->updated) {
+		// 		$f->date = strtotime($f->updated);
+		// 	} else {
+		// 		$f->date = strtotime($f->created);
+		// 	}
+
+		// 	$f->date = time();
+
+		// 	unset($f->created);
+		// 	unset($f->updated);
+		// }
+
+		// $tree['folders'] = $folders;
+
+		// if (!is_null($folderId)) {		// Get links in Home
+		// 	$sql = 'SELECT lu.id, title, url, created, updated FROM links l, links_users lu WHERE folder_id = :folderId AND l.id = link_id AND status = 1';
+		// } else {
+		// 	$sql = 'SELECT lu.id, title, url, created, updated FROM links l, links_users lu WHERE folder_id IS NULL AND l.id = link_id AND status = 1';
+		// }
+
+		// $stmt = $db->prepare($sql);
+
+		// if (!is_null($folderId)) {
+		// 	$stmt->bindParam(':folderId', $folderId);
+		// }
+
+		// $stmt->execute();
+
+		// $links = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		// foreach ($links as $l) {
+		// 	if (!is_null($l->updated)) {
+		// 		$l->date = strtotime($l->updated);
+		// 	} else {
+		// 		$l->date = strtotime($l->created);
+		// 	}
+
+		// 	unset($l->created);
+		// 	unset($l->updated);
+		// }
+
+		// $tree['links'] = $links;
+
+		// // Get the breadcrumb
+		// if (isset($folder->parent_id) and !is_null($folder->parent_id)) {
+		// 	$tree['breadcrumb'] = array();
+		// 	getParentFolder($tree['breadcrumb'], $folder->parent_id, $db);
+		// }
+
+		// echo json_encode($tree);
 	} catch(Exception $e) {
 		echo '{"error":"' . $e->getMessage() . '"}';
 	}
